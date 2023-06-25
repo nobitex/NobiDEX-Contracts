@@ -57,7 +57,7 @@ contract stdxp {
     }
 
     function unstake() external {
-        require(stakes[msg.sender].isActive, "You don't have an active stake.");
+        require(stakes[msg.sender].isActive, "ERROR: 0You don't have an active stake.");
 
         Stake memory _stake = stakes[msg.sender];
         uint256 reward = calculateReward(msg.sender);

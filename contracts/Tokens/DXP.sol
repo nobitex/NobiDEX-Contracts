@@ -18,7 +18,7 @@ contract RDXP is ERC20 {
     }
 
     function calculateTotalMintAmount() public view returns (uint256) {
-        // formula
+        // sigmoid formula
         // return totalMintAmount
     }
 

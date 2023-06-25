@@ -59,10 +59,10 @@ contract Governance {
 
     // Execute a proposal
     function executeProposal(uint256 proposalId) external {
-        require(proposalId < proposalCount, "Invalid proposal ID");
+        require(proposalId < proposalCount, "ERROR: Invalid proposal ID");
         require(
             !proposals[proposalId].executed,
-            "Proposal has already been executed"
+            "ERROR: Proposal has already been executed"
         );
         require(
             proposals[proposalId].forVotes == threshold,
