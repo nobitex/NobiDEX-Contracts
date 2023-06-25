@@ -17,7 +17,7 @@ contract RDXP is ERC20 {
         currentEpochMaxMintAmount = 0;
     }
 
-    function calculateTotalMintAmount() public view returns (uint256) {
+    function calculateEpochMintAmount() public view returns (uint256) {
         // sigmoid formula
         // return totalMintAmount
     }
@@ -27,7 +27,7 @@ contract RDXP is ERC20 {
         // Example: return someValue;
     }
 
-    function distributeEndOfEpochTokens() public {
+    function distributeEndOfEpochTokens() public {  
         require(
             currentEpochMaxMintAmount > 0,
             "No tokens to distribute in the current epoch"
@@ -53,10 +53,7 @@ contract RDXP is ERC20 {
 
     function claimRDXP() public {
         // logic for claiming RDXP tokens here
-        // Example: require(someCondition, "Error message");
-        // Example: uint256 amount = calculateClaimAmount(msg.sender);
-        // Example: updateBalances(msg.sender, amount);
-        // Example: emit Transfer(address(0), msg.sender, amount);
+        // emit event
     }
 
 
