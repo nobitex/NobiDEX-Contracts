@@ -1,0 +1,4 @@
+[
+  "constructor(address[])",
+  "function isOwner(address) view returns (bool)"
+]
