@@ -199,17 +199,14 @@ contract swapper is Pausable, ReentrancyGuard {
             ) = _checkTransactionFeasiblity(matchedOrder);
             (
                 bool isTransactionTimeValid,
-                bool isSignatureValid
+                bool isSignatureValid,
+                bool isValueZero
             ) = _checkTransactionValidity(matchedOrder);
             (
                 bool isPriceFair,
                 bool isPriceRelative,
                 bool isFeeFairness
             ) = _checkTransactoinFairness(matchedOrder);
-
-            (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
-                matchedOrder
-            );
 
             if (!(isTransactionFeasible)) {
                 batchExecuteStatus[i] = SwapStatus(
@@ -267,12 +264,7 @@ contract swapper is Pausable, ReentrancyGuard {
                 continue;
             }
 
-            if (
-                matchedOrder.makerTotalSellAmount - takerFee == 0 ||
-                matchedOrder.takerTotalSellAmount - makerFee == 0 ||
-                takerFee == 0 ||
-                makerFee == 0
-            ) {
+            if (isValueZero) {
                 batchExecuteStatus[i] = SwapStatus(
                     matchedOrder.matchID,
                     ZERO_TRANSFER_AMOUNT_ERROR_CODE
@@ -497,8 +489,11 @@ contract swapper is Pausable, ReentrancyGuard {
 
     function _checkTransactionValidity(
         MatchedOrders memory _matchedOrder
-    ) internal view whenPaused returns (bool, bool) {
+    ) internal view whenPaused returns (bool, bool, bool) {
         uint256 chainID = block.chainid;
+        (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
+            _matchedOrder
+        );
         bool isTransactionTimeValid = (_matchedOrder.makerValidUntil <
             block.number) || (_matchedOrder.takerValidUntil < block.number);
         //signature validity
@@ -542,7 +537,15 @@ contract swapper is Pausable, ReentrancyGuard {
 
         bool isSignatureValid = (isMakerSignatureValid &&
             isTakerSignatureValid);
-        return (isTransactionTimeValid, isSignatureValid);
+
+        //zero check
+
+        bool isValueZero = (_matchedOrder.makerTotalSellAmount - takerFee ==
+            0 ||
+            _matchedOrder.takerTotalSellAmount - makerFee == 0 ||
+            takerFee == 0 ||
+            makerFee == 0);
+        return (isTransactionTimeValid, isSignatureValid, isValueZero);
     }
 
     function _checkTransactoinFairness(
