@@ -272,7 +272,7 @@ contract swapper is Pausable, ReentrancyGuard {
                 continue;
             }
 
-            swapTokens(matchedOrder);
+            _swapTokens(matchedOrder);
 
             batchExecuteStatus[i] = SwapStatus(
                 matchedOrder.matchID,
@@ -576,7 +576,7 @@ contract swapper is Pausable, ReentrancyGuard {
         return (takerFee, makerFee);
     }
 
-    function swapTokens(
+    function _swapTokens(
         MatchedOrders memory _matchedOrder
     ) internal whenPaused {
         (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
