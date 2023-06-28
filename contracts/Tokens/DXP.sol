@@ -9,7 +9,7 @@ contract RDXP is ERC20 {
     uint256 private epoch;
     uint256 private currentEpochMaxMintAmount;
 
-    constructor(
+                                                                                                                                                                                                                                                                                                                                                                                                                                                     constructor(
         string memory _name,
         string memory _symbol
     ) ERC20(_name, _symbol) {
@@ -48,7 +48,7 @@ contract RDXP is ERC20 {
                 i++;
             }
         }
-
+ 
     }
 
     function claimRDXP() public {
