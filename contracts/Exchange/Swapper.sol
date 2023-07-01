@@ -30,6 +30,7 @@ contract swapper is Pausable, ReentrancyGuard {
     address public Admin;
     address public candidateAdmin;
     uint16 public maxFeeRatio;
+    uint16[8] errorCodes = [402, 410, 408, 412, 417, 409, 401, 406];
 
     // status codes
     // Low Balance Or Allowance ERROR  402 (Payment Required)
@@ -43,14 +44,14 @@ contract swapper is Pausable, ReentrancyGuard {
     // SUCCESSFUL SWAP 200 (OK)
     // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
-    uint16 private constant LOW_BALANCE_OR_LOW_ALLOWANCE_ERROR_CODE = 402;
-    uint16 private constant CANCELED_ORDER_ERROR_CODE = 410;
-    uint16 private constant VALID_UNTIL_ERROR_CODE = 408;
-    uint16 private constant PRICE_FAIRNESS_ERROR_CODE = 412;
-    uint16 private constant PRICE_RELATION_ERROR_CODE = 417;
-    uint16 private constant FEE_FAIRNESS_ERROR_CODE = 409;
-    uint16 private constant SIGNATURE_VALIDATION_ERROR_CODE = 401;
-    uint16 private constant ZERO_TRANSFER_AMOUNT_ERROR_CODE = 406;
+    // uint16 private constant LOW_BALANCE_OR_LOW_ALLOWANCE_ERROR_CODE = 402;
+    // uint16 private constant CANCELED_ORDER_ERROR_CODE = 410;
+    // uint16 private constant VALID_UNTIL_ERROR_CODE = 408;
+    // uint16 private constant PRICE_FAIRNESS_ERROR_CODE = 412;
+    // uint16 private constant PRICE_RELATION_ERROR_CODE = 417;
+    // uint16 private constant FEE_FAIRNESS_ERROR_CODE = 409;
+    // uint16 private constant SIGNATURE_VALIDATION_ERROR_CODE = 401;
+    // uint16 private constant ZERO_TRANSFER_AMOUNT_ERROR_CODE = 406;
     uint16 private constant SUCCESSFUL_SWAP_CODE = 200;
 
     /// @dev brokersAddresses are the only addresses that are allowed to call the Swap function
@@ -198,7 +199,7 @@ contract swapper is Pausable, ReentrancyGuard {
                 bool isOrderCancelleded
             ) = _checkTransactionFeasiblity(matchedOrder);
             (
-                bool isTransactionTimeValid,
+                bool isTransactionExpired,
                 bool isSignatureValid,
                 bool isValueZero
             ) = _checkTransactionValidity(matchedOrder);
@@ -208,69 +209,89 @@ contract swapper is Pausable, ReentrancyGuard {
                 bool isFeeFairness
             ) = _checkTransactoinFairness(matchedOrder);
 
-            if (!(isTransactionFeasible)) {
-                batchExecuteStatus[i] = SwapStatus(
-                    matchedOrder.matchID,
-                    LOW_BALANCE_OR_LOW_ALLOWANCE_ERROR_CODE
-                );
-                continue;
-            }
+            bool[8] memory _checks = [
+                !isTransactionFeasible,
+                isOrderCancelleded,
+                isTransactionExpired,
+                !isPriceFair,
+                !isPriceRelative,
+                !isFeeFairness,
+                !isSignatureValid,
+                isValueZero
+            ];
 
-            if (isOrderCancelleded) {
-                batchExecuteStatus[i] = SwapStatus(
-                    matchedOrder.matchID,
-                    CANCELED_ORDER_ERROR_CODE
-                );
-                continue;
+            for (uint256 j = 0; j < _checks.length; j++) {
+                if (_checks[j]) {
+                    batchExecuteStatus[i] = SwapStatus(
+                        matchedOrder.matchID,
+                        errorCodes[j]
+                    );
+                    continue;
+                }
             }
+            // if (!(isTransactionFeasible)) {
+            //     batchExecuteStatus[i] = SwapStatus(
+            //         matchedOrder.matchID,
+            //         LOW_BALANCE_OR_LOW_ALLOWANCE_ERROR_CODE
+            //     );
+            //     continue;
+            // }
 
-            if (isTransactionTimeValid) {
-                batchExecuteStatus[i] = SwapStatus(
-                    matchedOrder.matchID,
-                    VALID_UNTIL_ERROR_CODE
-                );
-                continue;
-            }
+            // if (isOrderCancelleded) {
+            //     batchExecuteStatus[i] = SwapStatus(
+            //         matchedOrder.matchID,
+            //         CANCELED_ORDER_ERROR_CODE
+            //     );
+            //     continue;
+            // }
 
-            if (!isSignatureValid) {
-                batchExecuteStatus[i] = SwapStatus(
-                    matchedOrder.matchID,
-                    SIGNATURE_VALIDATION_ERROR_CODE
-                );
-                continue;
-            }
+            // if (isTransactionTimeValid) {
+            //     batchExecuteStatus[i] = SwapStatus(
+            //         matchedOrder.matchID,
+            //         VALID_UNTIL_ERROR_CODE
+            //     );
+            //     continue;
+            // }
 
-            if (!isPriceFair) {
-                batchExecuteStatus[i] = SwapStatus(
-                    matchedOrder.matchID,
-                    PRICE_FAIRNESS_ERROR_CODE
-                );
-                continue;
-            }
+            // if (!isPriceFair) {
+            //     batchExecuteStatus[i] = SwapStatus(
+            //         matchedOrder.matchID,
+            //         PRICE_FAIRNESS_ERROR_CODE
+            //     );
+            //     continue;
+            // }
 
-            if (!isPriceRelative) {
-                batchExecuteStatus[i] = SwapStatus(
-                    matchedOrder.matchID,
-                    PRICE_RELATION_ERROR_CODE
-                );
-                continue;
-            }
+            // if (!isPriceRelative) {
+            //     batchExecuteStatus[i] = SwapStatus(
+            //         matchedOrder.matchID,
+            //         PRICE_RELATION_ERROR_CODE
+            //     );
+            //     continue;
+            // }
 
-            if (!isFeeFairness) {
-                batchExecuteStatus[i] = SwapStatus(
-                    matchedOrder.matchID,
-                    FEE_FAIRNESS_ERROR_CODE
-                );
-                continue;
-            }
+            // if (!isFeeFairness) {
+            //     batchExecuteStatus[i] = SwapStatus(
+            //         matchedOrder.matchID,
+            //         FEE_FAIRNESS_ERROR_CODE
+            //     );
+            //     continue;
+            // }
 
-            if (isValueZero) {
-                batchExecuteStatus[i] = SwapStatus(
-                    matchedOrder.matchID,
-                    ZERO_TRANSFER_AMOUNT_ERROR_CODE
-                );
-                continue;
-            }
+            // if (!isSignatureValid) {
+            //     batchExecuteStatus[i] = SwapStatus(
+            //         matchedOrder.matchID,
+            //         SIGNATURE_VALIDATION_ERROR_CODE
+            //     );
+            //     continue;
+            // }
+
+            // if (isValueZero) {
+            //     batchExecuteStatus[i] = SwapStatus(
+            //         matchedOrder.matchID,
+            //         ZERO_TRANSFER_AMOUNT_ERROR_CODE
+            //     );
+            //     continue;
+            // }
 
             _swapTokens(matchedOrder);
 
@@ -494,7 +515,7 @@ contract swapper is Pausable, ReentrancyGuard {
         (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
             _matchedOrder
         );
-        bool isTransactionTimeValid = (_matchedOrder.makerValidUntil <
+        bool isTransactionExpired = (_matchedOrder.makerValidUntil <
             block.number) || (_matchedOrder.takerValidUntil < block.number);
         //signature validity
         bytes32 makerMsgHash = _getMessageHash(
@@ -545,7 +566,7 @@ contract swapper is Pausable, ReentrancyGuard {
             _matchedOrder.takerTotalSellAmount - makerFee == 0 ||
             takerFee == 0 ||
             makerFee == 0);
-        return (isTransactionTimeValid, isSignatureValid, isValueZero);
+        return (isTransactionExpired, isSignatureValid, isValueZero);
     }
 
     function _checkTransactoinFairness(
