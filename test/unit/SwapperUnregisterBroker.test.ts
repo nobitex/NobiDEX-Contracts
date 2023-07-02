@@ -2,8 +2,8 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { deployContracts, getAccounts } from '../Utils.test'
 
-describe('Dexoresso', function () {
-  describe('`removeBroker` Functionality', async function () {
+describe('swapper', function () {
+  describe('`unregisterBroker` Functionality', async function () {
     it('should remove a broker from the mapping', async function () {
       // arrange
       const { swapper } = await loadFixture(deployContracts)

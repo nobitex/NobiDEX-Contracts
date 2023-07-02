@@ -6,8 +6,8 @@ import hre from 'hardhat'
 import { deployContracts, getAccounts, transferSomeTokens, createMsgHash } from '../Utils.test'
 import { deploy } from '@openzeppelin/hardhat-upgrades/dist/utils'
 
-describe('Dexoresso', function () {
-  describe('`executeSwap` Functionality', async function () {
+describe('swapper', function () {
+  describe('`Swap` Functionality', async function () {
     it('should emit TranactionCreated events', async function () {
       // arrange
       const { gnosis, swapper, token1, token2, token3, token4 } = await loadFixture(deployContracts)

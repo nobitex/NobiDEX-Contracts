@@ -2,8 +2,8 @@ import { loadFixture } from '@nomicfoundation/hardhat-network-helpers'
 import { expect } from 'chai'
 import { deployContracts, getAccounts } from '../Utils.test'
 
-describe('Dexoresso', function () {
-  describe('`addBroker` Functionality', async function () {
+describe('swapper', function () {
+  describe('`registerBroker` Functionality', async function () {
     it("should add a new broker to the 'brokersAdresses' mapping", async function () {
       // arrange
       const { swapper } = await loadFixture(deployContracts)
@@ -15,7 +15,7 @@ describe('Dexoresso', function () {
       //assert
       expect(await swapper.brokersAddresses(daoMember5.address)).to.equal(true)
     })
-    it('should revert if msg.sender is not an daoMember in Admin contract', async function () {
+    it('should revert if msg.sender is not an daoMember in gnosis contract', async function () {
       const { daoMember5, evil } = await getAccounts()
       // arrange
       const { swapper } = await loadFixture(deployContracts)

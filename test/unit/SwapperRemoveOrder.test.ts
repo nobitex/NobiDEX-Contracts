@@ -4,8 +4,8 @@ import hre from 'hardhat'
 import { deployContracts, getAccounts, createMsgHash, transferSomeTokens } from '../Utils.test'
 import { ethers } from 'ethers'
 
-describe('Dexoresso', function () {
-  describe('`cancelOrder` Functionality', async function () {
+describe('swapper', function () {
+  describe('`removeOrder` Functionality', async function () {
     it('should cancel an order with the given ID', async function () {
       // arrange
       const { swapper, token3, token4 } = await loadFixture(deployContracts)
