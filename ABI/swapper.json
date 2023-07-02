@@ -16,10 +16,9 @@
   "function paused() view returns (bool)",
   "function proposeToUpdateAdmin(address)",
   "function registerBroker(address[])",
-  "function removeOrder(tuple(bytes32,bytes,uint64))",
+  "function removeOrder(tuple(uint16,uint64,uint64,uint256,uint256,uint256,address,address),bytes,uint64)",
   "function unpause()",
   "function unregisterBroker(address[])",
   "function updateAdmin()",
-  "function updateCancelledOrdersStatus(tuple(address,uint56)[])",
   "function updateFeeRatio(uint16)"
 ]
