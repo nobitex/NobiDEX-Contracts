@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { deployContracts, getAccounts } from '../Utils.test'
 
 describe('swapper', function () {
-  describe('`unregisterBroker` Functionality', async function () {
+  describe('`unregisterBrokers` Functionality', async function () {
     it('should remove a broker from the mapping', async function () {
       // arrange
       const { swapper } = await loadFixture(deployContracts)
@@ -11,7 +11,7 @@ describe('swapper', function () {
 
       //check if the address is not a broker
       expect(await swapper.brokersAddresses(daoMember4.address)).to.equal(true)
-      await swapper.connect(daoMember1).unregisterBroker([daoMember4.address])
+      await swapper.connect(daoMember1).unregisterBrokers([daoMember4.address])
       //assert
       expect(await swapper.brokersAddresses(daoMember4.address)).to.equal(false)
     })
@@ -21,7 +21,7 @@ describe('swapper', function () {
       const { swapper } = await loadFixture(deployContracts)
 
       //assert
-      await expect(swapper.connect(evil).unregisterBroker([daoMember4.address])).to.be.revertedWith(
+      await expect(swapper.connect(evil).unregisterBrokers([daoMember4.address])).to.be.revertedWith(
         'ERROR: unauthorized caller'
       )
     })

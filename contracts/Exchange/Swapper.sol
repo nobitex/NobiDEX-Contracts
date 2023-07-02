@@ -7,9 +7,8 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "hardhat/console.sol";
 
-/// @title A trustless offchain orderbook-based DEX
+/// @title A trustless off-chain orderbook-based DEX
 /// @author nobidex team
 /// @notice Only a group of preApproved addresses(brokers) are allowed to Swap assets directly from the contract
 /*
@@ -30,20 +29,17 @@ contract swapper is Pausable, ReentrancyGuard {
     address public Moderator;
     address public candidateModerator;
     uint16 public maxFeeRatio;
-    uint16[8] errorCodes = [402, 410, 408, 412, 417, 409, 401, 406];
-
     // status codes
     // Low Balance Or Allowance ERROR  402 (Payment Required)
     // Cancelled order ERROR 410 (Gone)
     // ValidUntil ERROR  408 (Request Timeout)
-    // Price Fairness ERROR 412 (Precondition Failed)
-    // Price Relation ERROR 417 (Expectation Failed)
-    // Fee Fairness ERROR  409 (Conflict)
+    // Fairness ERROR 412 (Precondition Failed)
     // Signature Validation ERROR 401 (Unauthorized)
     // Zero transfer amount ERROR 406 (Not Acceptable)
     // SUCCESSFUL SWAP 200 (OK)
     // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
+    uint16[6] errorCodes = [402, 410, 408, 412, 401, 406];
     uint16 private constant SUCCESSFUL_SWAP_CODE = 200;
 
     /// @dev brokersAddresses are the only addresses that are allowed to call the Swap function
@@ -51,9 +47,9 @@ contract swapper is Pausable, ReentrancyGuard {
 
     mapping(address => bool) private DaoMembers;
 
-    /// @dev orderStatus mapps the address of the user to one of it's orderIDs to the orders status
+    /// @dev orderRevokedStatus mapps the address of the user to one of it's orderIDs to the orders status
     /// @notice when the order status is true the order is considered cancelled
-    mapping(address => mapping(uint64 => bool)) public orderCanceledStatus;
+    mapping(address => mapping(uint64 => bool)) public orderRevokedStatus;
 
     // Structs
     struct MatchedOrders {
@@ -94,31 +90,15 @@ contract swapper is Pausable, ReentrancyGuard {
         address buyTokenAddress;
     }
 
-    struct CancelOrderData {
-        address userAddress;
-        uint56 orderID;
-    }
-
-    struct cancleOrderData {
-        bytes32 hash;
-        bytes signature;
-        uint64 orderID;
-    }
-
     // Events
 
     /// @dev Emitted when the Swap is called
     event SwapExecuted(SwapStatus[]);
 
-    /// @dev Emitted when the Pause function is called
-    event transferredAssets(address[]);
-    event EthTransferStatus(bool);
-
-    /// @dev Emitted when the removeOrder function is called
+    /// @dev Emitted when the revokeOrder function is called
     event orderCancelled(address, uint64);
 
     // Modifiers
-
     modifier isBroker() {
         require(brokersAddresses[msg.sender], "ERROR: unauthorized caller");
         _;
@@ -129,8 +109,8 @@ contract swapper is Pausable, ReentrancyGuard {
         _;
     }
 
-    /// @dev isDaoMember, checks to see if the caller is one the listed DAOmembers of the Moderator
-    /// @dev daoMembers are the only addresses that are allowed to call the following functions: registerBroker, unregisterBroker, pause
+    /// @dev isDaoMember, checks to see if the caller is one the listed Moderator
+    /// @dev daoMembers are the only addresses that are allowed to call the following functions: registerBrokers, unregisterBrokers, pause
     modifier isDaoMember() {
         require(_isOwner(msg.sender), "ERROR: unauthorized caller");
         _;
@@ -144,12 +124,12 @@ contract swapper is Pausable, ReentrancyGuard {
      *
      */
     constructor(
-        uint16 feeRatio,
-        address payable _Moderator,
+        uint16 _maxFeeRatio,
+        address payable _moderator,
         address[] memory _brokers
     ) {
-        maxFeeRatio = feeRatio;
-        Moderator = _Moderator;
+        maxFeeRatio = _maxFeeRatio;
+        Moderator = _moderator;
 
         for (uint256 i = 0; i < _brokers.length; ) {
             brokersAddresses[_brokers[i]] = true;
@@ -165,7 +145,7 @@ contract swapper is Pausable, ReentrancyGuard {
      * @notice Swap function execute the token swaps and fee transactions,
      * @notice Swap function contains multiple fairness and validation checks for each Swap,
      * @notice Swap function checks are for assuring our users that no broker that uses this contract
-     * has the abaility to abuse their trust,
+     * has the ability to abuse their trust,
      *
      *
      * @dev The matchedOrders data must match with the signed order and the signature of the user.
@@ -180,55 +160,56 @@ contract swapper is Pausable, ReentrancyGuard {
     function Swap(
         MatchedOrders[] calldata matchedOrders
     ) external virtual whenNotPaused isBroker nonReentrant {
-        uint256 len = matchedOrders.length;
-        SwapStatus[] memory batchExecuteStatus = new SwapStatus[](len);
-        bool matchCanceled;
+        SwapStatus[] memory batchExecuteStatus = new SwapStatus[](matchedOrders.length);
 
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < matchedOrders.length; i++) {
             MatchedOrders memory matchedOrder = matchedOrders[i];
+            bool matchFailed = false;
+
+            (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
+                matchedOrder
+            );
 
             (
                 bool isTransactionFeasible,
-                bool isOrderCancelleded
-            ) = _checkTransactionFeasiblity(matchedOrder);
+                bool isOrderCancelled
+            ) = _checkTransactionFeasibility(matchedOrder);
+
             (
                 bool isTransactionExpired,
                 bool isSignatureValid,
                 bool isValueZero
-            ) = _checkTransactionValidity(matchedOrder);
-            (
-                bool isPriceFair,
-                bool isPriceRelative,
-                bool isFeeFairness
-            ) = _checkTransactoinFairness(matchedOrder);
+            ) = _checkTransactionValidity(matchedOrder, takerFee, makerFee);
 
-            bool[8] memory _checks = [
+            (
+                bool isMatchFair
+            ) = _checkTransactionFairness(matchedOrder);
+
+            bool[6] memory _checksFailConditions = [
                 !isTransactionFeasible,
-                isOrderCancelleded,
+                isOrderCancelled,
                 isTransactionExpired,
-                !isPriceFair,
-                !isPriceRelative,
-                !isFeeFairness,
+                !isMatchFair,
                 !isSignatureValid,
                 isValueZero
             ];
 
-            for (uint256 j = 0; j < _checks.length; j++) {
-                if (_checks[j]) {
+            for (uint256 j = 0; j < _checksFailConditions.length; j++) {
+                if (_checksFailConditions[j]) {
                     batchExecuteStatus[i] = SwapStatus(
                         matchedOrder.matchID,
                         errorCodes[j]
                     );
-                    matchCanceled = true;
+                    matchFailed = true;
                     break;
                 }
             }
 
-            if (matchCanceled) {
+            if (matchFailed) {
                 continue;
             }
 
-            _swapTokens(matchedOrder);
+            _swapTokens(matchedOrder, takerFee, makerFee);
 
             batchExecuteStatus[i] = SwapStatus(
                 matchedOrder.matchID,
@@ -255,14 +236,14 @@ contract swapper is Pausable, ReentrancyGuard {
     }
 
     /**
-     * @notice registerBroker function sets an address to True in brokersAddresses mapping, making it a valid caller for Swap function,
+     * @notice registerBrokers function sets an address to True in brokersAddresses mapping, making it a valid caller for Swap function,
      *
      * @dev msg.sender must be a DAO member,
      *
      * @param _brokers address is the address that the DAOMember wants to turn to a broker.
      *
      */
-    function registerBroker(
+    function registerBrokers(
         address[] memory _brokers
     ) external whenNotPaused isDaoMember {
         for (uint256 i = 0; i < _brokers.length; ) {
@@ -274,33 +255,20 @@ contract swapper is Pausable, ReentrancyGuard {
     }
 
     /**
-     * @notice unregisterBroker function sets an address to False in brokersAddresses mapping, making it an unvalid caller for Swap function,
+     * @notice unregisterBroker function sets an address to False in brokersAddresses mapping, making it an invalid caller for Swap function,
      *
      * @dev msg.sender must be a DAO member,
      *
      * @param _brokers address is the address that the DAOMember wants to remove from brokers.
      *
      */
-    function unregisterBroker(address[] memory _brokers) external isDaoMember {
+    function unregisterBrokers(address[] memory _brokers) external isDaoMember {
         for (uint256 i = 0; i < _brokers.length; ) {
             brokersAddresses[_brokers[i]] = false;
             unchecked {
                 i++;
             }
         }
-    }
-
-    /**
-     * @notice updateModerator function handle the update of the Moderator variable,
-     *
-     * @dev msg.sender must be the new Moderator contract address,
-     *
-     */
-    function updateModerator() external whenNotPaused {
-        require(candidateModerator == msg.sender, "ERROR: invalid sender");
-
-        Moderator = candidateModerator;
-        candidateModerator = address(0);
     }
 
     /**
@@ -318,38 +286,51 @@ contract swapper is Pausable, ReentrancyGuard {
      */
     function proposeToUpdateModerator(
         address _newModerator
-    ) external whenNotPaused isModerator {
+    ) external isModerator {
         require(candidateModerator != _newModerator, "ERROR: already proposed");
         candidateModerator = _newModerator;
     }
 
     /**
-     * @notice removeOrder function sets the status of the msg.senders order to true in isOrderCanceled mapping,
+     * @notice updateModerator function handle the update of the Moderator variable,
      *
-     * @notice removeOrder function gives the users the ability to manage their orders on-chain in addition to managing
+     * @dev msg.sender must be the new Moderator contract address,
+     *
+     */
+    function updateModerator() external {
+        require(candidateModerator == msg.sender, "ERROR: invalid sender");
+
+        Moderator = candidateModerator;
+        candidateModerator = address(0);
+    }
+
+    /**
+     * @notice revokeOrder function sets the status of the msg.senders order to true in isOrderCanceled mapping,
+     *
+     * @notice revokeOrder function gives the users the ability to manage their orders on-chain in addition to managing
      * them off-chain through the dex itself,
      *
      * @dev orderCancelled event is emitted with the msg.sender(users address) and the users orderID the wish to cancel,
-     * @param _MessageParameters is the ID of the order the user wish to cancel.
+     * @param _messageParameters is the ID of the order the user wish to cancel.
      *
      */
-    
-    function removeOrder(
-        MessageParameters memory _MessageParameters,
-        bytes memory _signature,
-        uint64 _orderID
+
+    function revokeOrder(
+        MessageParameters memory _messageParameters,
+        bytes memory _signature
     ) external whenNotPaused {
-        bytes32 makerMsgHash = _getMessageHash(_MessageParameters);
+        uint64 orderID = _messageParameters.orderID;
+        bytes32 makerMsgHash = _getMessageHash(_messageParameters);
         bool isMakerSignatureValid = _isValidSignatureHash(
             msg.sender,
             makerMsgHash,
             _signature
         );
         require(isMakerSignatureValid, "ERROR: invalid signature");
-        bool orderStatus = orderCanceledStatus[msg.sender][_orderID];
+        bool orderStatus = orderRevokedStatus[msg.sender][orderID];
         require(!orderStatus, "ERROR: already cancelled");
-        orderCanceledStatus[msg.sender][_orderID] = true;
-        emit orderCancelled(msg.sender, _orderID);
+        orderRevokedStatus[msg.sender][orderID] = true;
+        emit orderCancelled(msg.sender, orderID);
     }
 
     // pause and unpause functions
@@ -358,7 +339,7 @@ contract swapper is Pausable, ReentrancyGuard {
      * @notice pause function, transfers all the given tokens balances and the Ether (if the contract have any Ether balance) to the Moderator contract and triggers  the stopped state,
      *
      * @dev Paused event is emitted with the list of tokens,
-     * @dev EthTransferStatus is emmited if there is any Eth in the contract with the transfer results,
+     * @dev EthTransferStatus is emitted if there is any Eth in the contract with the transfer results,
      * @dev msg.sender must be the Moderator member,
      *
      * @param tokenAddresses is the token list to be transferred to the Moderator contract,
@@ -368,30 +349,23 @@ contract swapper is Pausable, ReentrancyGuard {
         address[] memory tokenAddresses
     ) external whenNotPaused isDaoMember nonReentrant {
         uint256 len = tokenAddresses.length;
-        uint256 EthBalance = address(this).balance;
 
         for (uint256 i = 0; i < len; ) {
-            if ((tokenAddresses[i] == address(0)) && (EthBalance > 0)) {
-                bool success = payable(Moderator).send(EthBalance);
-
-                emit EthTransferStatus(success);
-                unchecked {
-                    i++;
-                }
-                continue;
+            if (tokenAddresses[i] == address(0)) {
+                uint256 EthBalance = address(this).balance;
+                payable(Moderator).transfer(EthBalance);
+            } else {
+                uint256 balance = IERC20(tokenAddresses[i]).balanceOf(
+                    address(this)
+                );
+                IERC20(tokenAddresses[i]).safeTransfer(Moderator, balance);
             }
-
-            uint256 balance = IERC20(tokenAddresses[i]).balanceOf(
-                address(this)
-            );
-            IERC20(tokenAddresses[i]).safeTransfer(Moderator, balance);
 
             unchecked {
                 i++;
             }
         }
         _pause();
-        emit transferredAssets(tokenAddresses);
     }
 
     /**
@@ -404,17 +378,17 @@ contract swapper is Pausable, ReentrancyGuard {
     }
 
     /**
-     * @dev _checkTransactionFeasiblity function checks the Transaction Feasiblity and if the Transaction cancelled returning the result as boolians.
-     * @dev since the function is internal, the data will later be used in the swap function to validat each swap.
+     * @dev _checkTransactionFeasibility function checks the Transaction Feasibility and if the Transaction cancelled returning the result as booleans.
+     * @dev since the function is internal, the data will later be used in the swap function to validate each swap.
 
      * @param _matchedOrder is the data of each swap,
      *
      */
 
-    function _checkTransactionFeasiblity(
+    function _checkTransactionFeasibility(
         MatchedOrders memory _matchedOrder
-    ) internal view whenNotPaused returns (bool, bool) {
-        //Transaction Feasiblity
+    ) internal view returns (bool, bool) {
+        //Transaction Feasibility
         bool isTransactionFeasible = _ValidateTransaction(
             _matchedOrder.makerUserAddress,
             _matchedOrder.makerSellTokenAddress,
@@ -427,30 +401,29 @@ contract swapper is Pausable, ReentrancyGuard {
             );
 
         //Transaction cancelled
-        bool isOrderCancelleded = orderCanceledStatus[
+        bool isOrderCancelled = orderRevokedStatus[
             _matchedOrder.makerUserAddress
         ][_matchedOrder.makerOrderID] ||
-            orderCanceledStatus[_matchedOrder.takerUserAddress][
+            orderRevokedStatus[_matchedOrder.takerUserAddress][
                 _matchedOrder.takerOrderID
             ];
 
-        return (isTransactionFeasible, isOrderCancelleded);
+        return (isTransactionFeasible, isOrderCancelled);
     }
 
     /**
-     * @dev _checkTransactionValidity function checks the Transactions valid until and  the Transfer amount vality and the signature validity, returning the result as boolians.
-     * @dev since the function is internal, the data will later be used in the swap function to validat each swap.
+     * @dev _checkTransactionValidity function checks the Transactions valid until and  the Transfer amount validity and the signature validity, returning the result as booleans.
+     * @dev since the function is internal, the data will later be used in the swap function to validate each swap.
 
      * @param _matchedOrder is the data of each swap,
      *
      */
     function _checkTransactionValidity(
-        MatchedOrders memory _matchedOrder
-    ) internal view whenNotPaused returns (bool, bool, bool) {
+        MatchedOrders memory _matchedOrder,
+        uint256 _takerFee,
+        uint256 _makerFee
+    ) internal view returns (bool, bool, bool) {
         uint256 chainID = block.chainid;
-        (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
-            _matchedOrder
-        );
 
         //Transaction validity
         bool isTransactionExpired = (_matchedOrder.makerValidUntil <
@@ -500,24 +473,24 @@ contract swapper is Pausable, ReentrancyGuard {
 
         //zero check
 
-        bool isValueZero = (_matchedOrder.makerTotalSellAmount - takerFee ==
+        bool isValueZero = (_matchedOrder.makerTotalSellAmount - _takerFee ==
             0 ||
-            _matchedOrder.takerTotalSellAmount - makerFee == 0 ||
-            takerFee == 0 ||
-            makerFee == 0);
+            _matchedOrder.takerTotalSellAmount - _makerFee == 0 ||
+            _takerFee == 0 ||
+            _makerFee == 0);
         return (isTransactionExpired, isSignatureValid, isValueZero);
     }
 
     /**
-     * @dev _checkTransactoinFairness function checks the price and fee fainess and the relativity of the swap amounts toward each other as maker and taker, returning the result as boolians.
-     * @dev since the function is internal, the data will later be used in the swap function to validat each swap.
+     * @dev _checkTransactionFairness function checks the price and fee fairness and the relativity of the swap amounts toward each other as maker and taker, returning the result as boolians.
+     * @dev since the function is internal, the data will later be used in the swap function to validate each swap.
 
      * @param _matchedOrder is the data of each swap,
      *
      */
-    function _checkTransactoinFairness(
+    function _checkTransactionFairness(
         MatchedOrders memory _matchedOrder
-    ) internal view whenNotPaused returns (bool, bool, bool) {
+    ) internal view returns (bool) {
         bool isPriceFair = (_matchedOrder.makerTotalSellAmount *
             _matchedOrder.makerRatioBuyArg) ==
             (_matchedOrder.makerRatioSellArg *
@@ -530,11 +503,11 @@ contract swapper is Pausable, ReentrancyGuard {
         bool isFeeFairness = (_matchedOrder.makerFeeRatio <= maxFeeRatio) &&
             (_matchedOrder.takerFeeRatio <= maxFeeRatio);
 
-        return (isPriceFair, isPriceRelative, isFeeFairness);
+        return (isPriceFair && isPriceRelative && isFeeFairness);
     }
 
     /**
-     * @dev _calculateTransactionFee function calculates each users fee amount according to the fee ratuio assigned to them.
+     * @dev _calculateTransactionFee function calculates each users fee amount according to the fee ratio assigned to them.
      * @dev since the function is internal, the data will later be used in the swap function to make the transfers.
 
      * @param _matchedOrder is the data of each swap,
@@ -551,7 +524,7 @@ contract swapper is Pausable, ReentrancyGuard {
         return (takerFee, makerFee);
     }
 
-        /**
+    /**
      * @dev _swapTokens function swaps the transfer amounts to each user and the fee to the Moderator.
      * @dev since the function is internal, it will later be used in the swap function to make the transfers.
 
@@ -560,31 +533,30 @@ contract swapper is Pausable, ReentrancyGuard {
      */
 
     function _swapTokens(
-        MatchedOrders memory _matchedOrder
-    ) internal whenNotPaused {
-        (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
-            _matchedOrder
-        );
+        MatchedOrders memory _matchedOrder,
+        uint256 _takerFee,
+        uint256 _makerFee
+    ) internal {
         IERC20(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
             _matchedOrder.makerUserAddress,
             _matchedOrder.takerUserAddress,
-            _matchedOrder.makerTotalSellAmount - takerFee
+            _matchedOrder.makerTotalSellAmount - _takerFee
         );
         IERC20(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
             _matchedOrder.takerUserAddress,
             _matchedOrder.makerUserAddress,
-            _matchedOrder.takerTotalSellAmount - makerFee
+            _matchedOrder.takerTotalSellAmount - _makerFee
         );
 
         IERC20(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
             _matchedOrder.makerUserAddress,
             Moderator,
-            takerFee
+            _takerFee
         );
         IERC20(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
             _matchedOrder.takerUserAddress,
             Moderator,
-            makerFee
+            _makerFee
         );
     }
 
@@ -627,7 +599,7 @@ contract swapper is Pausable, ReentrancyGuard {
     }
 
     /**
-     * @notice _getMessageHashfunction hashes the data that user signed when they placed the order for further validation,
+     * @notice _getMessageHashFunction hashes the data that user signed when they placed the order for further validation,
      *
      * @dev _getMessageHash function is used in th execute Swap to hash the given Swap data,
      *
@@ -687,5 +659,4 @@ contract swapper is Pausable, ReentrancyGuard {
         }
         return isTransactionValid;
     }
-
 }

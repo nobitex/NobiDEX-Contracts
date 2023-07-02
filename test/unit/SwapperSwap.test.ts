@@ -207,7 +207,7 @@ describe('swapper', function () {
       const adminT4preTxBalance = await token4.balanceOf(gnosis.address)
 
       //add the caller into broker addresses mappings
-      await swapper.connect(daoMember1).registerBroker([deployer.address])
+      await swapper.connect(daoMember1).registerBrokers([deployer.address])
 
       //broadcast the batchOrders to the contract
       await swapper.connect(deployer).Swap(MatchedOrders)
@@ -237,8 +237,8 @@ describe('swapper', function () {
       const eventsExpectedArguments = [
         [ethers.BigNumber.from(1), 200],
         [ethers.BigNumber.from(2), 402],
-        [ethers.BigNumber.from(3), 409],
-        [ethers.BigNumber.from(4), 417],
+        [ethers.BigNumber.from(3), 412],
+        [ethers.BigNumber.from(4), 412],
         [ethers.BigNumber.from(5), 412],
         [ethers.BigNumber.from(6), 408],
         [ethers.BigNumber.from(7), 406]
@@ -353,7 +353,7 @@ describe('swapper', function () {
       await token4.connect(daoMember4).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
 
       // adding caller to the brokerAddressees mapping
-      await swapper.connect(daoMember1).registerBroker([deployer.address])
+      await swapper.connect(daoMember1).registerBrokers([deployer.address])
       // broadcast the order to the contract
       const tx = await swapper.connect(deployer).Swap(MatchedOrders)
 

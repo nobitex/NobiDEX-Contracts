@@ -5,7 +5,7 @@ import { deployContracts, getAccounts, createMsgHash, transferSomeTokens } from 
 import { ethers } from 'ethers'
 
 describe('swapper', function () {
-  describe('`removeOrder` Functionality', async function () {
+  describe('`revokeOrder` Functionality', async function () {
     it('should cancel an order with the given ID', async function () {
       // arrange
       const { swapper, token3, token4 } = await loadFixture(deployContracts)
@@ -66,7 +66,7 @@ describe('swapper', function () {
         
 
       // adding caller to the brokerAddressees mapping
-      await swapper.connect(daoMember1).registerBroker([deployer.address])
+      await swapper.connect(daoMember1).registerBrokers([deployer.address])
       // cancelling the makers order
       const cancelOrders = 
         {
@@ -84,7 +84,7 @@ describe('swapper', function () {
       const makerOrderID = 2356
 
       
-      const tx1 = await swapper.connect(daoMember3).removeOrder(cancelOrders, makerSignature, makerOrderID)
+      const tx1 = await swapper.connect(daoMember3).revokeOrder(cancelOrders, makerSignature)
      
       // getting the events data
       
