@@ -5,14 +5,14 @@ const defaultFee = 20
 
 export async function deployContracts() {
 
-  // deploys Dexpresso
+  // deploys swapper
   const gnosis: Contract = await deployGnosisMock()
 
-  const dexpresso: Contract = await deployDexpresso(gnosis.address)
+  const swapper: Contract = await deploySwapper(gnosis.address)
 
   // deploying 4 mock erc20 tokens
   const { token1, token2, token3, token4 } = await deployERC20()
-  return { gnosis,dexpresso, token1, token2, token3, token4 }
+  return { gnosis, swapper, token1, token2, token3, token4 }
 }
 
 export async function getAccounts() {
@@ -41,18 +41,18 @@ export async function forwardBlockTimestampByNDays(n: number) {
 
 
 
-async function deployDexpresso(multiSig: string) {
+async function deploySwapper(multiSig: string) {
   const { daoMember1, daoMember2, daoMember3, daoMember4 } = await getAccounts()
 
-  const Dexpresso = await ethers.getContractFactory('swapper')
-  const dexpresso = await Dexpresso.deploy(defaultFee, multiSig, [
+  const Swapper = await ethers.getContractFactory('swapper')
+  const swapper = await Swapper.deploy(defaultFee, multiSig, [
     daoMember1.address,
     daoMember2.address,
     daoMember3.address,
     daoMember4.address,
   ])
-  await dexpresso.deployed()
-  return dexpresso
+  await swapper.deployed()
+  return swapper
 }
 
 async function deployGnosisMock() {
@@ -80,12 +80,12 @@ export async function transferSomeTokensTo(tokens: Contract[], amounts: BigNumbe
 export async function transferSomeTokens(tokens: Contract[], amounts: BigNumber[], to: any[]) {
 
   const { deployer } = await getAccounts()
-  // deploys Dexpresso
+  // deploys swapper
 
-  const Dexpresso: Contract = await deployDexpresso(deployer.address)
+  const Swapper: Contract = await deploySwapper(deployer.address)
   for (let i = 0; i < tokens.length; i++) {
     await tokens[i].transfer(to[i].address, amounts[i])
-    await tokens[i].connect(to[i]).increaseAllowance(Dexpresso.address, amounts[i])
+    await tokens[i].connect(to[i]).increaseAllowance(Swapper.address, amounts[i])
   }
 }
 

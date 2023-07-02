@@ -1,9 +1,9 @@
 {
-  "name": "dexpresso-contracts",
+  "name": "swapper-contracts",
   "version": "0.0.1",
-  "description": "SmartContract for Dexpresso platform (order book based dex)",
-  "repository": "git@github.com:dexpresso-protocol/contracts.git",
-  "author": "dexpresso contract team",
+  "description": "SmartContract for swapper platform (order book based dex)",
+  "repository": "git@github.com:swapper-protocol/contracts.git",
+  "author": "swapper contract team",
   "dependencies": {
     "@gnosis.pm/safe-deployments": "^1.19.0",
     "@openzeppelin/contracts": "^4.8.0",

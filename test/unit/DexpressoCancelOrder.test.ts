@@ -8,7 +8,7 @@ describe('Dexoresso', function () {
   describe('`cancelOrder` Functionality', async function () {
     it('should cancel an order with the given ID', async function () {
       // arrange
-      const { dexpresso, token3, token4 } = await loadFixture(deployContracts)
+      const { swapper, token3, token4 } = await loadFixture(deployContracts)
       const { deployer, daoMember1, daoMember3, daoMember4 } = await getAccounts()
 
       const provider = hre.ethers.provider
@@ -61,12 +61,12 @@ describe('Dexoresso', function () {
         
         // base allowances
     
-        await token3.connect(daoMember3).increaseAllowance(dexpresso.address, 1000n * 10n ** 18n)
-        await token4.connect(daoMember4).increaseAllowance(dexpresso.address, 1000n * 10n ** 18n)
+        await token3.connect(daoMember3).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
+        await token4.connect(daoMember4).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
         
 
       // adding caller to the brokerAddressees mapping
-      await dexpresso.connect(daoMember1).registerBroker([deployer.address])
+      await swapper.connect(daoMember1).registerBroker([deployer.address])
       // cancelling the makers order
       const cancelOrders = 
         {
@@ -84,7 +84,7 @@ describe('Dexoresso', function () {
       const makerOrderID = 2356
 
       
-      const tx1 = await dexpresso.connect(daoMember3).removeOrder(cancelOrders, makerSignature, makerOrderID)
+      const tx1 = await swapper.connect(daoMember3).removeOrder(cancelOrders, makerSignature, makerOrderID)
      
       // getting the events data
       
@@ -102,7 +102,7 @@ describe('Dexoresso', function () {
       
       // broadcast the order to the contract
      
-      const tx2 = await dexpresso.connect(deployer).Swap(MatchedOrders)
+      const tx2 = await swapper.connect(deployer).Swap(MatchedOrders)
       
       // getting the events data
       const transactionReceipt2 = await tx2.wait()

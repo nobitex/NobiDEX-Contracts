@@ -18,16 +18,16 @@ async function main() {
   if (!daoMultiSigAddress) {
     throw new Error('daoMultiSigAddress is not defined')
   }
-  const Dexpresso = await ethers.getContractFactory('swapper')
+  const Swapper = await ethers.getContractFactory('swapper')
 
-  const dexpresso = await Dexpresso.deploy(maxFeeRatio, daoMultiSigAddress, brokerAddress)
+  const swapper = await Swapper.deploy(maxFeeRatio, daoMultiSigAddress, brokerAddress)
 
-  await dexpresso.deployed()
+  await swapper.deployed()
 
-  console.log('Dexpresso deployed to:', dexpresso.address)
+  console.log('Swapper deployed to:', swapper.address)
 
   await hre.run('verify:verify', {
-    address: dexpresso.address,
+    address: swapper.address,
     constructorArguments: [30, daoMultiSigAddress, brokerAddress],
   })
 }
