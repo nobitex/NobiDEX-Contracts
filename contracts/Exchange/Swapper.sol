@@ -24,11 +24,11 @@ contract swapper is Pausable, ReentrancyGuard {
     // State Variables
 
     /*
-     * @dev Admin is the only address that can call the following functions:
-     * updateFeeRatio, unpause, proposeToUpdateAdmin.
+     * @dev Moderator is the only address that can call the following functions:
+     * updateFeeRatio, unpause, proposeToUpdateModerator.
      */
-    address public Admin;
-    address public candidateAdmin;
+    address public Moderator;
+    address public candidateModerator;
     uint16 public maxFeeRatio;
     uint16[8] errorCodes = [402, 410, 408, 412, 417, 409, 401, 406];
 
@@ -124,12 +124,12 @@ contract swapper is Pausable, ReentrancyGuard {
         _;
     }
 
-    modifier isAdmin() {
-        require(msg.sender == Admin, "ERROR: unauthorized caller");
+    modifier isModerator() {
+        require(msg.sender == Moderator, "ERROR: unauthorized caller");
         _;
     }
 
-    /// @dev isDaoMember, checks to see if the caller is one the listed DAOmembers of the Admin
+    /// @dev isDaoMember, checks to see if the caller is one the listed DAOmembers of the Moderator
     /// @dev daoMembers are the only addresses that are allowed to call the following functions: registerBroker, unregisterBroker, pause
     modifier isDaoMember() {
         require(_isOwner(msg.sender), "ERROR: unauthorized caller");
@@ -140,16 +140,16 @@ contract swapper is Pausable, ReentrancyGuard {
 
     /**
      *
-     *@dev Sets the values for {MaxFeeRatio} and {Admin} and {brokersAddresses} mapping.
+     *@dev Sets the values for {MaxFeeRatio} and {Moderator} and {brokersAddresses} mapping.
      *
      */
     constructor(
         uint16 feeRatio,
-        address payable _Admin,
+        address payable _Moderator,
         address[] memory _brokers
     ) {
         maxFeeRatio = feeRatio;
-        Admin = _Admin;
+        Moderator = _Moderator;
 
         for (uint256 i = 0; i < _brokers.length; ) {
             brokersAddresses[_brokers[i]] = true;
@@ -242,14 +242,14 @@ contract swapper is Pausable, ReentrancyGuard {
      * @notice updateFeeRatio function sets a new uint256 to MaxFeeRatio variable,
      *
      * @dev the new feeRatio cannot be the same as the last one,
-     * @dev msg.sender must be the Admin,
+     * @dev msg.sender must be the Moderator,
      *
      * @param _newFeeRatio uint256 is the new fee to be set to the maxFeeRatio variable.
      *
      */
     function updateFeeRatio(
         uint16 _newFeeRatio
-    ) external whenNotPaused isAdmin {
+    ) external whenNotPaused isModerator {
         require(_newFeeRatio != maxFeeRatio, "ERROR: invalid input");
         maxFeeRatio = _newFeeRatio;
     }
@@ -291,36 +291,36 @@ contract swapper is Pausable, ReentrancyGuard {
     }
 
     /**
-     * @notice updateAdmin function handle the update of the Admin variable,
+     * @notice updateModerator function handle the update of the Moderator variable,
      *
-     * @dev msg.sender must be the new Admin contract address,
+     * @dev msg.sender must be the new Moderator contract address,
      *
      */
-    function updateAdmin() external whenNotPaused {
-        require(candidateAdmin == msg.sender, "ERROR: invalid sender");
+    function updateModerator() external whenNotPaused {
+        require(candidateModerator == msg.sender, "ERROR: invalid sender");
 
-        Admin = candidateAdmin;
-        candidateAdmin = address(0);
+        Moderator = candidateModerator;
+        candidateModerator = address(0);
     }
 
     /**
-     * @notice proposeToUpdateAdmin function handles suggesting the update of the Admin address,
-     * this suggestion will be reviewed by DAOmembers and after the appropriate approvals in the Admin contract,
-     * the proposed address is assigned to the candidateAdmin variables,
+     * @notice proposeToUpdateModerator function handles suggesting the update of the Moderator address,
+     * this suggestion will be reviewed by DAOmembers and after the appropriate approvals in the Moderator contract,
+     * the proposed address is assigned to the candidateModerator variables,
      *
-     * @notice proposeToUpdateAdmin function is for the time it is decided decide to change the contracts proxy,
+     * @notice proposeToUpdateModerator function is for the time it is decided decide to change the contracts proxy,
      *
-     * @dev the new Admin address cannot be the same as the last one,
-     * @dev msg.sender must be the previous Admin contract,
+     * @dev the new Moderator address cannot be the same as the last one,
+     * @dev msg.sender must be the previous Moderator contract,
      *
-     * @param _newAdmin address is the new candidate for Admin variable.
+     * @param _newModerator address is the new candidate for Moderator variable.
      *
      */
-    function proposeToUpdateAdmin(
-        address _newAdmin
-    ) external whenNotPaused isAdmin {
-        require(candidateAdmin != _newAdmin, "ERROR: already proposed");
-        candidateAdmin = _newAdmin;
+    function proposeToUpdateModerator(
+        address _newModerator
+    ) external whenNotPaused isModerator {
+        require(candidateModerator != _newModerator, "ERROR: already proposed");
+        candidateModerator = _newModerator;
     }
 
     /**
@@ -354,13 +354,13 @@ contract swapper is Pausable, ReentrancyGuard {
     // pause and unpause functions
 
     /**
-     * @notice pause function, transfers all the given tokens balances and the Ether (if the contract have any Ether balance) to the Admin contract and triggers  the stopped state,
+     * @notice pause function, transfers all the given tokens balances and the Ether (if the contract have any Ether balance) to the Moderator contract and triggers  the stopped state,
      *
      * @dev Paused event is emitted with the list of tokens,
      * @dev EthTransferStatus is emmited if there is any Eth in the contract with the transfer results,
-     * @dev msg.sender must be the Admin member,
+     * @dev msg.sender must be the Moderator member,
      *
-     * @param tokenAddresses is the token list to be transferred to the Admin contract,
+     * @param tokenAddresses is the token list to be transferred to the Moderator contract,
      *
      */
     function pause(
@@ -371,7 +371,7 @@ contract swapper is Pausable, ReentrancyGuard {
 
         for (uint256 i = 0; i < len; ) {
             if ((tokenAddresses[i] == address(0)) && (EthBalance > 0)) {
-                bool success = payable(Admin).send(EthBalance);
+                bool success = payable(Moderator).send(EthBalance);
 
                 emit EthTransferStatus(success);
                 unchecked {
@@ -383,7 +383,7 @@ contract swapper is Pausable, ReentrancyGuard {
             uint256 balance = IERC20(tokenAddresses[i]).balanceOf(
                 address(this)
             );
-            IERC20(tokenAddresses[i]).safeTransfer(Admin, balance);
+            IERC20(tokenAddresses[i]).safeTransfer(Moderator, balance);
 
             unchecked {
                 i++;
@@ -396,9 +396,9 @@ contract swapper is Pausable, ReentrancyGuard {
     /**
      * @notice unpause function, Returns the contract to normal state after it has been paused,
      *
-     * @dev msg.sender must be the Admin,
+     * @dev msg.sender must be the Moderator,
      */
-    function unpause() external whenPaused isAdmin {
+    function unpause() external whenPaused isModerator {
         _unpause();
     }
 
@@ -551,7 +551,7 @@ contract swapper is Pausable, ReentrancyGuard {
     }
 
         /**
-     * @dev _swapTokens function swaps the transfer amounts to each user and the fee to the admin.
+     * @dev _swapTokens function swaps the transfer amounts to each user and the fee to the Moderator.
      * @dev since the function is internal, it will later be used in the swap function to make the transfers.
 
      * @param _matchedOrder is the data of each swap,
@@ -577,26 +577,26 @@ contract swapper is Pausable, ReentrancyGuard {
 
         IERC20(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
             _matchedOrder.makerUserAddress,
-            Admin,
+            Moderator,
             takerFee
         );
         IERC20(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
             _matchedOrder.takerUserAddress,
-            Admin,
+            Moderator,
             makerFee
         );
     }
 
     /**
-     * @dev _isDao function validates the users signature is one of the owners of the admin contract,
-     * with an external call to the "Admin" contract,
+     * @dev _isDao function validates the users signature is one of the owners of the Moderator contract,
+     * with an external call to the "Moderator" contract,
      *
      * @param _caller is the address of the msg.sender in the isDaoMember modifier,
      *
      */
 
     function _isOwner(address _caller) internal returns (bool) {
-        (bool success, bytes memory data) = Admin.call(
+        (bool success, bytes memory data) = Moderator.call(
             abi.encodeWithSignature("isOwner(address)", _caller)
         );
         require(success, "ERROR: external call failed");
