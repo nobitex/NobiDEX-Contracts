@@ -2,12 +2,12 @@
 
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "hardhat/console.sol";
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
+import '@openzeppelin/contracts/security/Pausable.sol';
+import '@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import 'hardhat/console.sol';
 
 /// @title A trustless offchain orderbook-based DEX
 /// @author nobidex team
@@ -128,19 +128,19 @@ contract swapper is Pausable, ReentrancyGuard {
     // Modifiers
 
     modifier isBroker() {
-        require(brokersAddresses[msg.sender], "ERROR: unauthorized caller");
+        require(brokersAddresses[msg.sender], 'ERROR: unauthorized caller');
         _;
     }
 
     modifier isAdmin() {
-        require(msg.sender == Admin, "ERROR: unauthorized caller");
+        require(msg.sender == Admin, 'ERROR: unauthorized caller');
         _;
     }
 
     /// @dev isDaoMember, checks to see if the caller is one the listed DAOmembers of the Admin
     /// @dev daoMembers are the only addresses that are allowed to call the following functions: registerBroker, unregisterBroker, pause
     modifier isDaoMember() {
-        require(_isOwner(msg.sender), "ERROR: unauthorized caller");
+        require(_isOwner(msg.sender), 'ERROR: unauthorized caller');
         _;
     }
 
@@ -151,11 +151,7 @@ contract swapper is Pausable, ReentrancyGuard {
      *@dev Sets the values for {MaxFeeRatio} and {Admin} and {brokersAddresses} mapping.
      *
      */
-    constructor(
-        uint16 feeRatio,
-        address payable _Admin,
-        address[] memory _brokers
-    ) {
+    constructor(uint16 feeRatio, address payable _Admin, address[] memory _brokers) {
         maxFeeRatio = feeRatio;
         Admin = _Admin;
 
@@ -185,29 +181,19 @@ contract swapper is Pausable, ReentrancyGuard {
      *
      */
 
-    function Swap(
-        MatchedOrders[] calldata matchedOrders
-    ) external virtual whenNotPaused isBroker nonReentrant {
+    function Swap(MatchedOrders[] calldata matchedOrders) external virtual whenNotPaused isBroker nonReentrant {
         uint256 len = matchedOrders.length;
         SwapStatus[] memory batchExecuteStatus = new SwapStatus[](len);
+        bool matchCanceled;
 
         for (uint256 i = 0; i < len; i++) {
             MatchedOrders memory matchedOrder = matchedOrders[i];
 
-            (
-                bool isTransactionFeasible,
-                bool isOrderCancelleded
-            ) = _checkTransactionFeasiblity(matchedOrder);
-            (
-                bool isTransactionExpired,
-                bool isSignatureValid,
-                bool isValueZero
-            ) = _checkTransactionValidity(matchedOrder);
-            (
-                bool isPriceFair,
-                bool isPriceRelative,
-                bool isFeeFairness
-            ) = _checkTransactoinFairness(matchedOrder);
+            (bool isTransactionFeasible, bool isOrderCancelleded) = _checkTransactionFeasiblity(matchedOrder);
+            (bool isTransactionExpired, bool isSignatureValid, bool isValueZero) = _checkTransactionValidity(
+                matchedOrder
+            );
+            (bool isPriceFair, bool isPriceRelative, bool isFeeFairness) = _checkTransactoinFairness(matchedOrder);
 
             bool[8] memory _checks = [
                 !isTransactionFeasible,
@@ -222,83 +208,19 @@ contract swapper is Pausable, ReentrancyGuard {
 
             for (uint256 j = 0; j < _checks.length; j++) {
                 if (_checks[j]) {
-                    batchExecuteStatus[i] = SwapStatus(
-                        matchedOrder.matchID,
-                        errorCodes[j]
-                    );
-                    continue;
+                    batchExecuteStatus[i] = SwapStatus(matchedOrder.matchID, errorCodes[j]);
+                    matchCanceled = true;
+                    break;
                 }
             }
-            // if (!(isTransactionFeasible)) {
-            //     batchExecuteStatus[i] = SwapStatus(
-            //         matchedOrder.matchID,
-            //         LOW_BALANCE_OR_LOW_ALLOWANCE_ERROR_CODE
-            //     );
-            //     continue;
-            // }
 
-            // if (isOrderCancelleded) {
-            //     batchExecuteStatus[i] = SwapStatus(
-            //         matchedOrder.matchID,
-            //         CANCELED_ORDER_ERROR_CODE
-            //     );
-            //     continue;
-            // }
-
-            // if (isTransactionTimeValid) {
-            //     batchExecuteStatus[i] = SwapStatus(
-            //         matchedOrder.matchID,
-            //         VALID_UNTIL_ERROR_CODE
-            //     );
-            //     continue;
-            // }
-
-            // if (!isPriceFair) {
-            //     batchExecuteStatus[i] = SwapStatus(
-            //         matchedOrder.matchID,
-            //         PRICE_FAIRNESS_ERROR_CODE
-            //     );
-            //     continue;
-            // }
-
-            // if (!isPriceRelative) {
-            //     batchExecuteStatus[i] = SwapStatus(
-            //         matchedOrder.matchID,
-            //         PRICE_RELATION_ERROR_CODE
-            //     );
-            //     continue;
-            // }
-
-            // if (!isFeeFairness) {
-            //     batchExecuteStatus[i] = SwapStatus(
-            //         matchedOrder.matchID,
-            //         FEE_FAIRNESS_ERROR_CODE
-            //     );
-            //     continue;
-            // }
-
-            // if (!isSignatureValid) {
-            //     batchExecuteStatus[i] = SwapStatus(
-            //         matchedOrder.matchID,
-            //         SIGNATURE_VALIDATION_ERROR_CODE
-            //     );
-            //     continue;
-            // }
-
-            // if (isValueZero) {
-            //     batchExecuteStatus[i] = SwapStatus(
-            //         matchedOrder.matchID,
-            //         ZERO_TRANSFER_AMOUNT_ERROR_CODE
-            //     );
-            //     continue;
-            // }
+            if (matchCanceled) {
+                continue;
+            }
 
             _swapTokens(matchedOrder);
 
-            batchExecuteStatus[i] = SwapStatus(
-                matchedOrder.matchID,
-                SUCCESSFUL_SWAP_CODE
-            );
+            batchExecuteStatus[i] = SwapStatus(matchedOrder.matchID, SUCCESSFUL_SWAP_CODE);
         }
         emit SwapExecuted(batchExecuteStatus);
     }
@@ -312,10 +234,8 @@ contract swapper is Pausable, ReentrancyGuard {
      * @param _newFeeRatio uint256 is the new fee to be set to the maxFeeRatio variable.
      *
      */
-    function updateFeeRatio(
-        uint16 _newFeeRatio
-    ) external whenNotPaused isAdmin {
-        require(_newFeeRatio != maxFeeRatio, "ERROR: invalid input");
+    function updateFeeRatio(uint16 _newFeeRatio) external whenNotPaused isAdmin {
+        require(_newFeeRatio != maxFeeRatio, 'ERROR: invalid input');
         maxFeeRatio = _newFeeRatio;
     }
 
@@ -327,9 +247,7 @@ contract swapper is Pausable, ReentrancyGuard {
      * @param _brokers address is the address that the DAOMember wants to turn to a broker.
      *
      */
-    function registerBroker(
-        address[] memory _brokers
-    ) external whenNotPaused isDaoMember {
+    function registerBroker(address[] memory _brokers) external whenNotPaused isDaoMember {
         for (uint256 i = 0; i < _brokers.length; ) {
             brokersAddresses[_brokers[i]] = true;
             unchecked {
@@ -362,7 +280,7 @@ contract swapper is Pausable, ReentrancyGuard {
      *
      */
     function updateAdmin() external whenNotPaused {
-        require(candidateAdmin == msg.sender, "ERROR: invalid sender");
+        require(candidateAdmin == msg.sender, 'ERROR: invalid sender');
 
         Admin = candidateAdmin;
         candidateAdmin = address(0);
@@ -381,10 +299,8 @@ contract swapper is Pausable, ReentrancyGuard {
      * @param _newAdmin address is the new candidate for Admin variable.
      *
      */
-    function proposeToUpdateAdmin(
-        address _newAdmin
-    ) external whenNotPaused isAdmin {
-        require(candidateAdmin != _newAdmin, "ERROR: already proposed");
+    function proposeToUpdateAdmin(address _newAdmin) external whenNotPaused isAdmin {
+        require(candidateAdmin != _newAdmin, 'ERROR: already proposed');
         candidateAdmin = _newAdmin;
     }
 
@@ -395,45 +311,23 @@ contract swapper is Pausable, ReentrancyGuard {
      * them off-chain through the dex itself,
      *
      * @dev orderCancelled event is emitted with the msg.sender(users address) and the users orderID the wish to cancel,
-     * @param _cancelOrderData is the ID of the order the user wish to cancel.
+     * @param _MessageParameters is the ID of the order the user wish to cancel.
      *
      */
     function removeOrder(
-        cancleOrderData memory _cancelOrderData
+        MessageParameters memory _MessageParameters,
+        bytes memory _signature,
+        uint64 _orderID
     ) external whenNotPaused {
-        bool isMakerSignatureValid = _isValidSignatureHash(
-            msg.sender,
-            _cancelOrderData.hash,
-            _cancelOrderData.signature
-        );
-        require(isMakerSignatureValid, "ERROR: invalid signature");
-        bool orderStatus = orderCanceledStatus[msg.sender][
-            _cancelOrderData.orderID
-        ];
-        require(!orderStatus, "ERROR: already cancelled");
-        orderCanceledStatus[msg.sender][_cancelOrderData.orderID] = true;
-        emit orderCancelled(msg.sender, _cancelOrderData.orderID);
+        bytes32 makerMsgHash = _getMessageHash(_MessageParameters);
+        bool isMakerSignatureValid = _isValidSignatureHash(msg.sender, makerMsgHash, _signature);
+        require(isMakerSignatureValid, 'ERROR: invalid signature');
+        bool orderStatus = orderCanceledStatus[msg.sender][_orderID];
+        require(!orderStatus, 'ERROR: already cancelled');
+        orderCanceledStatus[msg.sender][_orderID] = true;
+        emit orderCancelled(msg.sender, _orderID);
     }
 
-    /**
-     * @notice updateCancelledOrdersStatus function deletes anauthorized addresses from the orderCanceledStatus mapping ,
-     *
-     * @dev orderCancelled event is emitted with the msg.sender(users address) and the users orderID the wish to cancel,
-     * @param _unauthorizedOrders is the ID of the order the user wish to cancel.
-     *
-     */
-    function updateCancelledOrdersStatus(
-        CancelOrderData[] memory _unauthorizedOrders
-    ) external whenNotPaused isBroker {
-        for (uint256 i = 0; i < _unauthorizedOrders.length; ) {
-            delete orderCanceledStatus[_unauthorizedOrders[i].userAddress][
-                _unauthorizedOrders[i].orderID
-            ];
-            unchecked {
-                i++;
-            }
-        }
-    }
 
     // pause and unpause functions
 
@@ -447,9 +341,7 @@ contract swapper is Pausable, ReentrancyGuard {
      * @param tokenAddresses is the token list to be transferred to the Admin contract,
      *
      */
-    function pause(
-        address[] memory tokenAddresses
-    ) external whenNotPaused isDaoMember nonReentrant {
+    function pause(address[] memory tokenAddresses) external whenNotPaused isDaoMember nonReentrant {
         uint256 len = tokenAddresses.length;
         uint256 EthBalance = address(this).balance;
 
@@ -464,9 +356,7 @@ contract swapper is Pausable, ReentrancyGuard {
                 continue;
             }
 
-            uint256 balance = IERC20(tokenAddresses[i]).balanceOf(
-                address(this)
-            );
+            uint256 balance = IERC20(tokenAddresses[i]).balanceOf(address(this));
             IERC20(tokenAddresses[i]).safeTransfer(Admin, balance);
 
             unchecked {
@@ -488,7 +378,7 @@ contract swapper is Pausable, ReentrancyGuard {
 
     function _checkTransactionFeasiblity(
         MatchedOrders memory _matchedOrder
-    ) internal view whenPaused returns (bool, bool) {
+    ) internal view whenNotPaused returns (bool, bool) {
         bool isTransactionFeasible = _ValidateTransaction(
             _matchedOrder.makerUserAddress,
             _matchedOrder.makerSellTokenAddress,
@@ -499,24 +389,18 @@ contract swapper is Pausable, ReentrancyGuard {
                 _matchedOrder.takerSellTokenAddress,
                 _matchedOrder.takerTotalSellAmount
             );
-        bool isOrderCancelleded = orderCanceledStatus[
-            _matchedOrder.makerUserAddress
-        ][_matchedOrder.makerOrderID] ||
-            orderCanceledStatus[_matchedOrder.takerUserAddress][
-                _matchedOrder.takerOrderID
-            ];
+        bool isOrderCancelleded = orderCanceledStatus[_matchedOrder.makerUserAddress][_matchedOrder.makerOrderID] ||
+            orderCanceledStatus[_matchedOrder.takerUserAddress][_matchedOrder.takerOrderID];
         return (isTransactionFeasible, isOrderCancelleded);
     }
 
     function _checkTransactionValidity(
         MatchedOrders memory _matchedOrder
-    ) internal view whenPaused returns (bool, bool, bool) {
+    ) internal view whenNotPaused returns (bool, bool, bool) {
         uint256 chainID = block.chainid;
-        (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
-            _matchedOrder
-        );
-        bool isTransactionExpired = (_matchedOrder.makerValidUntil <
-            block.number) || (_matchedOrder.takerValidUntil < block.number);
+        (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(_matchedOrder);
+        bool isTransactionExpired = (_matchedOrder.makerValidUntil < block.number) ||
+            (_matchedOrder.takerValidUntil < block.number);
         //signature validity
         bytes32 makerMsgHash = _getMessageHash(
             MessageParameters(
@@ -556,13 +440,11 @@ contract swapper is Pausable, ReentrancyGuard {
             _matchedOrder.takerSignature
         );
 
-        bool isSignatureValid = (isMakerSignatureValid &&
-            isTakerSignatureValid);
+        bool isSignatureValid = (isMakerSignatureValid && isTakerSignatureValid);
 
         //zero check
 
-        bool isValueZero = (_matchedOrder.makerTotalSellAmount - takerFee ==
-            0 ||
+        bool isValueZero = (_matchedOrder.makerTotalSellAmount - takerFee == 0 ||
             _matchedOrder.takerTotalSellAmount - makerFee == 0 ||
             takerFee == 0 ||
             makerFee == 0);
@@ -571,14 +453,11 @@ contract swapper is Pausable, ReentrancyGuard {
 
     function _checkTransactoinFairness(
         MatchedOrders memory _matchedOrder
-    ) internal view whenPaused returns (bool, bool, bool) {
-        bool isPriceFair = (_matchedOrder.makerTotalSellAmount *
-            _matchedOrder.makerRatioBuyArg) ==
-            (_matchedOrder.makerRatioSellArg *
-                _matchedOrder.takerTotalSellAmount);
+    ) internal view whenNotPaused returns (bool, bool, bool) {
+        bool isPriceFair = (_matchedOrder.makerTotalSellAmount * _matchedOrder.makerRatioBuyArg) ==
+            (_matchedOrder.makerRatioSellArg * _matchedOrder.takerTotalSellAmount);
 
-        bool isPriceRelative = (_matchedOrder.makerRatioSellArg *
-            _matchedOrder.takerRatioSellArg) >=
+        bool isPriceRelative = (_matchedOrder.makerRatioSellArg * _matchedOrder.takerRatioSellArg) >=
             (_matchedOrder.makerRatioBuyArg * _matchedOrder.takerRatioBuyArg);
 
         bool isFeeFairness = (_matchedOrder.makerFeeRatio <= maxFeeRatio) &&
@@ -589,20 +468,14 @@ contract swapper is Pausable, ReentrancyGuard {
 
     function _calculateTransactionFee(
         MatchedOrders memory _matchedOrder
-    ) internal view whenPaused returns (uint256, uint256) {
-        uint256 takerFee = (_matchedOrder.makerTotalSellAmount *
-            _matchedOrder.takerFeeRatio) / 1000;
-        uint256 makerFee = (_matchedOrder.takerTotalSellAmount *
-            _matchedOrder.makerFeeRatio) / 1000;
+    ) internal view whenNotPaused returns (uint256, uint256) {
+        uint256 takerFee = (_matchedOrder.makerTotalSellAmount * _matchedOrder.takerFeeRatio) / 1000;
+        uint256 makerFee = (_matchedOrder.takerTotalSellAmount * _matchedOrder.makerFeeRatio) / 1000;
         return (takerFee, makerFee);
     }
 
-    function _swapTokens(
-        MatchedOrders memory _matchedOrder
-    ) internal whenPaused {
-        (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
-            _matchedOrder
-        );
+    function _swapTokens(MatchedOrders memory _matchedOrder) internal whenNotPaused {
+        (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(_matchedOrder);
         IERC20(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
             _matchedOrder.makerUserAddress,
             _matchedOrder.takerUserAddress,
@@ -614,16 +487,8 @@ contract swapper is Pausable, ReentrancyGuard {
             _matchedOrder.takerTotalSellAmount - makerFee
         );
 
-        IERC20(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
-            _matchedOrder.makerUserAddress,
-            Admin,
-            takerFee
-        );
-        IERC20(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
-            _matchedOrder.takerUserAddress,
-            Admin,
-            makerFee
-        );
+        IERC20(_matchedOrder.makerSellTokenAddress).safeTransferFrom(_matchedOrder.makerUserAddress, Admin, takerFee);
+        IERC20(_matchedOrder.takerSellTokenAddress).safeTransferFrom(_matchedOrder.takerUserAddress, Admin, makerFee);
     }
 
     /**
@@ -635,10 +500,8 @@ contract swapper is Pausable, ReentrancyGuard {
      */
 
     function _isOwner(address _caller) internal returns (bool) {
-        (bool success, bytes memory data) = Admin.call(
-            abi.encodeWithSignature("isOwner(address)", _caller)
-        );
-        require(success, "ERROR: external call failed");
+        (bool success, bytes memory data) = Admin.call(abi.encodeWithSignature('isOwner(address)', _caller));
+        require(success, 'ERROR: external call failed');
         return abi.decode(data, (bool));
     }
 
@@ -656,12 +519,7 @@ contract swapper is Pausable, ReentrancyGuard {
         bytes32 _messageHash,
         bytes memory _userSignature
     ) internal view returns (bool) {
-        return
-            SignatureChecker.isValidSignatureNow(
-                _userAddress,
-                _messageHash,
-                _userSignature
-            );
+        return SignatureChecker.isValidSignatureNow(_userAddress, _messageHash, _userSignature);
     }
 
     /**
@@ -673,9 +531,7 @@ contract swapper is Pausable, ReentrancyGuard {
      * @param _messageParameters(MessageParameters struct) contains the data that a user signed while placing on order.
      *
      */
-    function _getMessageHash(
-        MessageParameters memory _messageParameters
-    ) internal pure returns (bytes32) {
+    function _getMessageHash(MessageParameters memory _messageParameters) internal pure returns (bytes32) {
         bytes32 hash = keccak256(
             abi.encodePacked(
                 _messageParameters.maxFeeRatio,
@@ -688,10 +544,7 @@ contract swapper is Pausable, ReentrancyGuard {
                 _messageParameters.buyTokenAddress
             )
         );
-        return
-            keccak256(
-                abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
-            );
+        return keccak256(abi.encodePacked('\x19Ethereum Signed Message:\n32', hash));
     }
 
     /**
@@ -711,14 +564,8 @@ contract swapper is Pausable, ReentrancyGuard {
     ) internal view returns (bool) {
         bool isTransactionValid;
         uint256 userBalance = IERC20(_userSellToken).balanceOf(_userAddress);
-        uint256 userAllowance = IERC20(_userSellToken).allowance(
-            _userAddress,
-            address(this)
-        );
-        if (
-            (userBalance >= _userSellAmount) &&
-            (userAllowance >= _userSellAmount)
-        ) {
+        uint256 userAllowance = IERC20(_userSellToken).allowance(_userAddress, address(this));
+        if ((userBalance >= _userSellAmount) && (userAllowance >= _userSellAmount)) {
             isTransactionValid = true;
         } else {
             isTransactionValid = false;
