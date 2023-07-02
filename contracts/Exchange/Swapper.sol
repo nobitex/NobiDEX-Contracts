@@ -333,6 +333,7 @@ contract swapper is Pausable, ReentrancyGuard {
      * @param _MessageParameters is the ID of the order the user wish to cancel.
      *
      */
+    
     function removeOrder(
         MessageParameters memory _MessageParameters,
         bytes memory _signature,
@@ -686,4 +687,5 @@ contract swapper is Pausable, ReentrancyGuard {
         }
         return isTransactionValid;
     }
+
 }
