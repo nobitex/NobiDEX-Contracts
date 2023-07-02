@@ -33,13 +33,13 @@ contract swapper is Pausable, ReentrancyGuard {
     // Low Balance Or Allowance ERROR  402 (Payment Required)
     // Cancelled order ERROR 410 (Gone)
     // ValidUntil ERROR  408 (Request Timeout)
-    // Fairness ERROR 412 (Precondition Failed)
+    // Fairness ERROR 417 (Precondition Failed)
     // Signature Validation ERROR 401 (Unauthorized)
     // Zero transfer amount ERROR 406 (Not Acceptable)
     // SUCCESSFUL SWAP 200 (OK)
     // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
-    uint16[6] errorCodes = [402, 410, 408, 412, 401, 406];
+    uint16[6] errorCodes = [402, 410, 408, 417, 401, 406];
     uint16 private constant SUCCESSFUL_SWAP_CODE = 200;
 
     /// @dev brokersAddresses are the only addresses that are allowed to call the Swap function

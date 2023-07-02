@@ -237,9 +237,9 @@ describe('swapper', function () {
       const eventsExpectedArguments = [
         [ethers.BigNumber.from(1), 200],
         [ethers.BigNumber.from(2), 402],
-        [ethers.BigNumber.from(3), 412],
-        [ethers.BigNumber.from(4), 412],
-        [ethers.BigNumber.from(5), 412],
+        [ethers.BigNumber.from(3), 417],
+        [ethers.BigNumber.from(4), 417],
+        [ethers.BigNumber.from(5), 417],
         [ethers.BigNumber.from(6), 408],
         [ethers.BigNumber.from(7), 406]
       ]
