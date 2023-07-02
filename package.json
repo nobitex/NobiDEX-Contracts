@@ -2,10 +2,12 @@
   "name": "hardhat-project",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
-    "hardhat": "^2.15.0",
+    "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
+    "hardhat": "^2.16.1",
     "ts-node": "^10.9.1"
   },
   "dependencies": {
+    "@ethersproject/bignumber": "^5.7.0",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
@@ -21,7 +23,8 @@
     "@types/mocha": ">=9.1.0",
     "chai": "^4.2.0",
     "dotenv": "^16.3.1",
-    "ethers": "^6.6.0",
+    "ethers": "5.7.2",
+    "ethers-utils": "^2.1.11",
     "hardhat-abi-exporter": "^2.10.1",
     "hardhat-gas-reporter": "^1.0.9",
     "solidity-coverage": "^0.8.1",

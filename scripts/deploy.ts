@@ -12,23 +12,23 @@ async function main() {
     '0x0B8c3a469cc808442Aab0253C3DfdeC7C34bF0E2',
     '0xD91c89CA6C37Bd57f1D5d762225C951E7631d90f',
   ]
-  const admin = ""
+  const daoMultiSigAddress = "0x7515ab9833921b20737E1a6286Cf20F93CB96D74"
   const maxFeeRatio = 30 // it means 20/1000 %
 
-  if (!admin) {
-    throw new Error('admin is not defined')
+  if (!daoMultiSigAddress) {
+    throw new Error('daoMultiSigAddress is not defined')
   }
-  const Swapper = await ethers.getContractFactory('Swapper')
+  const Dexpresso = await ethers.getContractFactory('swapper')
 
-  const swapper = await Swapper.deploy(maxFeeRatio, admin, brokerAddress)
+  const dexpresso = await Dexpresso.deploy(maxFeeRatio, daoMultiSigAddress, brokerAddress)
 
-  await swapper.deployed()
+  await dexpresso.deployed()
 
-  console.log('swapper deployed to:', swapper.address)
+  console.log('Dexpresso deployed to:', dexpresso.address)
 
   await hre.run('verify:verify', {
-    address: swapper.address,
-    constructorArguments: [30, admin, brokerAddress],
+    address: dexpresso.address,
+    constructorArguments: [30, daoMultiSigAddress, brokerAddress],
   })
 }
 
