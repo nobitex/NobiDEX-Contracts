@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  * _validateTransaction, _getMessageHash, _isValidSignatureHash.
  */
 
-contract swapper is Pausable, ReentrancyGuard {
+contract Swapper is Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     // State Variables
@@ -28,7 +28,9 @@ contract swapper is Pausable, ReentrancyGuard {
      */
     address public Moderator;
     address public candidateModerator;
+    uint32 public immutable  FeeRatioDenominator;
     uint16 public maxFeeRatio;
+    uint8 public version;
     // status codes
     // Low Balance Or Allowance ERROR  402 (Payment Required)
     // Cancelled order ERROR 410 (Gone)
@@ -124,12 +126,16 @@ contract swapper is Pausable, ReentrancyGuard {
      *
      */
     constructor(
-        uint16 _maxFeeRatio,
         address payable _moderator,
-        address[] memory _brokers
+        address[] memory _brokers,
+        uint32 _FeeRatioDenominator,
+        uint16 _maxFeeRatio,
+        uint8 _version
     ) {
         maxFeeRatio = _maxFeeRatio;
         Moderator = _moderator;
+        FeeRatioDenominator = _FeeRatioDenominator;
+        version = _version;
 
         for (uint256 i = 0; i < _brokers.length; ) {
             brokersAddresses[_brokers[i]] = true;
@@ -160,7 +166,9 @@ contract swapper is Pausable, ReentrancyGuard {
     function Swap(
         MatchedOrders[] calldata matchedOrders
     ) external virtual whenNotPaused isBroker nonReentrant {
-        SwapStatus[] memory batchExecuteStatus = new SwapStatus[](matchedOrders.length);
+        SwapStatus[] memory batchExecuteStatus = new SwapStatus[](
+            matchedOrders.length
+        );
 
         for (uint256 i = 0; i < matchedOrders.length; i++) {
             MatchedOrders memory matchedOrder = matchedOrders[i];
@@ -181,9 +189,7 @@ contract swapper is Pausable, ReentrancyGuard {
                 bool isValueZero
             ) = _checkTransactionValidity(matchedOrder, takerFee, makerFee);
 
-            (
-                bool isMatchFair
-            ) = _checkTransactionFairness(matchedOrder);
+            bool isMatchFair = _checkTransactionFairness(matchedOrder);
 
             bool[6] memory _checksFailConditions = [
                 !isTransactionFeasible,
@@ -377,6 +383,25 @@ contract swapper is Pausable, ReentrancyGuard {
         _unpause();
     }
 
+    //getter funtcions
+
+   /**
+    * @dev Retrieves the chain ID of the current blockchain.
+    * @return The chain ID as a uint256 value.
+    */
+    function getChainID() public view returns (uint256) {
+        return block.chainid;
+    }
+
+   /**
+    * @dev Retrieves the current block number within the blockchain.
+    * @return The block number as a uint256 value.
+    */
+
+    function getblockNumber() public view returns (uint256) {
+        return block.number;
+    }
+
     /**
      * @dev _checkTransactionFeasibility function checks the Transaction Feasibility and if the Transaction cancelled returning the result as booleans.
      * @dev since the function is internal, the data will later be used in the swap function to validate each swap.
@@ -518,9 +543,9 @@ contract swapper is Pausable, ReentrancyGuard {
         MatchedOrders memory _matchedOrder
     ) internal view whenNotPaused returns (uint256, uint256) {
         uint256 takerFee = (_matchedOrder.makerTotalSellAmount *
-            _matchedOrder.takerFeeRatio) / 1000;
+            _matchedOrder.takerFeeRatio) / FeeRatioDenominator;
         uint256 makerFee = (_matchedOrder.takerTotalSellAmount *
-            _matchedOrder.makerFeeRatio) / 1000;
+            _matchedOrder.makerFeeRatio) / FeeRatioDenominator;
         return (takerFee, makerFee);
     }
 

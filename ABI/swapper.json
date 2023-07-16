@@ -1,13 +1,16 @@
 [
-  "constructor(uint16,address,address[])",
+  "constructor(address,address[],uint32,uint16,uint8)",
   "event Paused(address)",
   "event SwapExecuted(tuple(uint256,uint16)[])",
   "event Unpaused(address)",
   "event orderCancelled(address,uint64)",
+  "function FeeRatioDenominator() view returns (uint32)",
   "function Moderator() view returns (address)",
   "function Swap(tuple(uint16,uint16,uint64,uint64,uint64,uint64,uint256,uint256,uint256,uint256,uint256,uint256,uint256,address,address,address,address,bytes,bytes)[])",
   "function brokersAddresses(address) view returns (bool)",
   "function candidateModerator() view returns (address)",
+  "function getChainID() view returns (uint256)",
+  "function getblockNumber() view returns (uint256)",
   "function maxFeeRatio() view returns (uint16)",
   "function orderRevokedStatus(address,uint64) view returns (bool)",
   "function pause(address[])",
@@ -18,5 +21,6 @@
   "function unpause()",
   "function unregisterBrokers(address[])",
   "function updateFeeRatio(uint16)",
-  "function updateModerator()"
+  "function updateModerator()",
+  "function version() view returns (uint8)"
 ]
