@@ -30,7 +30,7 @@ contract Swapper is Pausable, ReentrancyGuard {
     address public candidateModerator;
     uint32 public immutable  FeeRatioDenominator;
     uint16 public maxFeeRatio;
-    uint8 public version;
+    uint8 public immutable version;
     // status codes
     // Low Balance Or Allowance ERROR  402 (Payment Required)
     // Cancelled order ERROR 410 (Gone)
