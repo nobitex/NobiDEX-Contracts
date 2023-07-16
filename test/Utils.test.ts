@@ -44,13 +44,13 @@ export async function forwardBlockTimestampByNDays(n: number) {
 async function deploySwapper(multiSig: string) {
   const { daoMember1, daoMember2, daoMember3, daoMember4 } = await getAccounts()
 
-  const Swapper = await ethers.getContractFactory('swapper')
-  const swapper = await Swapper.deploy(defaultFee, multiSig, [
+  const Swapper = await ethers.getContractFactory('Swapper')
+  const swapper = await Swapper.deploy(multiSig, [
     daoMember1.address,
     daoMember2.address,
     daoMember3.address,
     daoMember4.address,
-  ])
+  ], 1000 , defaultFee, 3 )
   await swapper.deployed()
   return swapper
 }
