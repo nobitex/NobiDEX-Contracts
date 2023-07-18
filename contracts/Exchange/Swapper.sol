@@ -37,11 +37,10 @@ contract Swapper is Pausable, ReentrancyGuard {
     // ValidUntil ERROR  408 (Request Timeout)
     // Fairness ERROR 417 (Precondition Failed)
     // Signature Validation ERROR 401 (Unauthorized)
-    // Zero transfer amount ERROR 406 (Not Acceptable)
     // SUCCESSFUL SWAP 200 (OK)
     // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
-    uint16[6] errorCodes = [402, 410, 408, 417, 401, 406];
+    uint16[6] errorCodes = [402, 410, 408, 417, 401];
     uint16 private constant SUCCESSFUL_SWAP_CODE = 200;
 
     /// @dev brokersAddresses are the only addresses that are allowed to call the Swap function
@@ -185,19 +184,17 @@ contract Swapper is Pausable, ReentrancyGuard {
 
             (
                 bool isTransactionExpired,
-                bool isSignatureValid,
-                bool isValueZero
+                bool isSignatureValid
             ) = _checkTransactionValidity(matchedOrder, takerFee, makerFee);
 
             bool isMatchFair = _checkTransactionFairness(matchedOrder);
 
-            bool[6] memory _checksFailConditions = [
+            bool[5] memory _checksFailConditions = [
                 !isTransactionFeasible,
                 isOrderCancelled,
                 isTransactionExpired,
                 !isMatchFair,
-                !isSignatureValid,
-                isValueZero
+                !isSignatureValid
             ];
 
             for (uint256 j = 0; j < _checksFailConditions.length; j++) {
@@ -383,7 +380,7 @@ contract Swapper is Pausable, ReentrancyGuard {
         _unpause();
     }
 
-    //getter funtcions
+    //getter functions
 
    /**
     * @dev Retrieves the chain ID of the current blockchain.
@@ -398,7 +395,7 @@ contract Swapper is Pausable, ReentrancyGuard {
     * @return The block number as a uint256 value.
     */
 
-    function getblockNumber() public view returns (uint256) {
+    function getBlockNumber() public view returns (uint256) {
         return block.number;
     }
 
@@ -447,7 +444,7 @@ contract Swapper is Pausable, ReentrancyGuard {
         MatchedOrders memory _matchedOrder,
         uint256 _takerFee,
         uint256 _makerFee
-    ) internal view returns (bool, bool, bool) {
+    ) internal view returns (bool, bool) {
         uint256 chainID = block.chainid;
 
         //Transaction validity
@@ -496,14 +493,7 @@ contract Swapper is Pausable, ReentrancyGuard {
         bool isSignatureValid = (isMakerSignatureValid &&
             isTakerSignatureValid);
 
-        //zero check
-
-        bool isValueZero = (_matchedOrder.makerTotalSellAmount - _takerFee ==
-            0 ||
-            _matchedOrder.takerTotalSellAmount - _makerFee == 0 ||
-            _takerFee == 0 ||
-            _makerFee == 0);
-        return (isTransactionExpired, isSignatureValid, isValueZero);
+        return (isTransactionExpired, isSignatureValid);
     }
 
     /**

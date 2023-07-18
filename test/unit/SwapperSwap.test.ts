@@ -158,7 +158,7 @@ describe('swapper', function () {
           makerRatioBuyArg: 600n * 10n ** 18n,
           takerRatioSellArg: 650n * 10n ** 18n,
           takerRatioBuyArg: 3n * 10n ** 18n,
-          makerTotalSellAmount: 0,
+          makerTotalSellAmount: 56,
           takerTotalSellAmount:0,
           makerSellTokenAddress: token3.address,
           takerSellTokenAddress: token4.address,
@@ -241,7 +241,7 @@ describe('swapper', function () {
         [ethers.BigNumber.from(4), 417],
         [ethers.BigNumber.from(5), 417],
         [ethers.BigNumber.from(6), 408],
-        [ethers.BigNumber.from(7), 406]
+        [ethers.BigNumber.from(7), 417],
       ]
 
       // uint16 private constant ZERO_TRANSFER_AMOUNT_ERROR_CODE = 406;

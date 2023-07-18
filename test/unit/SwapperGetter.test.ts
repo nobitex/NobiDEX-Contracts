@@ -22,7 +22,7 @@ describe("swapper", function () {
       await provider.ready;
       const block = await provider.getBlock('latest');
       const blockNumber = block.number;
-      expect(await swapper.getblockNumber()).to.equal(blockNumber);
+      expect(await swapper.getBlockNumber()).to.equal(blockNumber);
     });
     it("should get the contract version", async function () {
       const { swapper } = await loadFixture(deployContracts);
