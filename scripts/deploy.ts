@@ -7,20 +7,12 @@ async function main() {
 
   console.log("Account balance:", (await deployer.getBalance()).toString());
 
-
-  const brokerAddress = [
-    "0x84A4eeD02695C113E703991C68a6cf3f4e3b6407",
-    "0x5A98A7554592a09E2985c9e6F2d447E7A2B1FE6C",
-    "0x14be4Dc6E2e7562eB80F20fA4f8dbD072B8a5667",
-    "0xE90814272dc69bA6Cdf45893b818b7AB28effA3A",
-    "0x6500406650A06fA5c5ef8edDEe7e350f859fe3b4",
-  ]
-  
+  const brokerAddress = [""]
   //Gnosis
-  const Moderator = "0x84A4eeD02695C113E703991C68a6cf3f4e3b6407";
-  const FeeRatioDenominator = "1000000"
-  const version = "3"
-  const maxFeeRatio = "1000"
+  const Moderator = "";
+  const FeeRatioDenominator = ""
+  const version = ""
+  const maxFeeRatio = ""
 
   if (!Moderator) {
     throw new Error("Moderator is not defined");
