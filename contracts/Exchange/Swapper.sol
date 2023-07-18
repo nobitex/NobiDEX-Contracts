@@ -185,7 +185,7 @@ contract Swapper is Pausable, ReentrancyGuard {
             (
                 bool isTransactionExpired,
                 bool isSignatureValid
-            ) = _checkTransactionValidity(matchedOrder, takerFee, makerFee);
+            ) = _checkTransactionValidity(matchedOrder);
 
             bool isMatchFair = _checkTransactionFairness(matchedOrder);
 
@@ -441,9 +441,7 @@ contract Swapper is Pausable, ReentrancyGuard {
      *
      */
     function _checkTransactionValidity(
-        MatchedOrders memory _matchedOrder,
-        uint256 _takerFee,
-        uint256 _makerFee
+        MatchedOrders memory _matchedOrder
     ) internal view returns (bool, bool) {
         uint256 chainID = block.chainid;
 
