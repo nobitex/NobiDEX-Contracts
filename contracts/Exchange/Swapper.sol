@@ -2,11 +2,13 @@
 
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/SignatureCheckerUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 /// @title A trustless off-chain orderbook-based DEX
 /// @author nobidex team
@@ -17,8 +19,13 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
  * _validateTransaction, _getMessageHash, _isValidSignatureHash.
  */
 
-contract Swapper is Pausable, ReentrancyGuard {
-    using SafeERC20 for IERC20;
+contract Swapper is
+    Initializable,
+    UUPSUpgradeable,
+    PausableUpgradeable,
+    ReentrancyGuardUpgradeable
+{
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     // State Variables
 
@@ -28,7 +35,7 @@ contract Swapper is Pausable, ReentrancyGuard {
      */
     address public Moderator;
     address public candidateModerator;
-    uint32 public immutable  FeeRatioDenominator;
+    uint32 public immutable FeeRatioDenominator;
     uint16 public maxFeeRatio;
     uint8 public immutable version;
     // status codes
@@ -358,10 +365,10 @@ contract Swapper is Pausable, ReentrancyGuard {
                 uint256 EthBalance = address(this).balance;
                 payable(Moderator).transfer(EthBalance);
             } else {
-                uint256 balance = IERC20(tokenAddresses[i]).balanceOf(
+                uint256 balance = IERC20Upgradeable(tokenAddresses[i]).balanceOf(
                     address(this)
                 );
-                IERC20(tokenAddresses[i]).safeTransfer(Moderator, balance);
+                IERC20Upgradeable(tokenAddresses[i]).safeTransfer(Moderator, balance);
             }
 
             unchecked {
@@ -382,18 +389,18 @@ contract Swapper is Pausable, ReentrancyGuard {
 
     //getter functions
 
-   /**
-    * @dev Retrieves the chain ID of the current blockchain.
-    * @return The chain ID as a uint256 value.
-    */
+    /**
+     * @dev Retrieves the chain ID of the current blockchain.
+     * @return The chain ID as a uint256 value.
+     */
     function getChainID() public view returns (uint256) {
         return block.chainid;
     }
 
-   /**
-    * @dev Retrieves the current block number within the blockchain.
-    * @return The block number as a uint256 value.
-    */
+    /**
+     * @dev Retrieves the current block number within the blockchain.
+     * @return The block number as a uint256 value.
+     */
 
     function getBlockNumber() public view returns (uint256) {
         return block.number;
@@ -550,23 +557,23 @@ contract Swapper is Pausable, ReentrancyGuard {
         uint256 _takerFee,
         uint256 _makerFee
     ) internal {
-        IERC20(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
+        IERC20Upgradeable(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
             _matchedOrder.makerUserAddress,
             _matchedOrder.takerUserAddress,
             _matchedOrder.makerTotalSellAmount - _takerFee
         );
-        IERC20(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
+        IERC20Upgradeable(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
             _matchedOrder.takerUserAddress,
             _matchedOrder.makerUserAddress,
             _matchedOrder.takerTotalSellAmount - _makerFee
         );
 
-        IERC20(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
+        IERC20Upgradeable(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
             _matchedOrder.makerUserAddress,
             Moderator,
             _takerFee
         );
-        IERC20(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
+        IERC20Upgradeable(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
             _matchedOrder.takerUserAddress,
             Moderator,
             _makerFee
@@ -604,7 +611,7 @@ contract Swapper is Pausable, ReentrancyGuard {
         bytes memory _userSignature
     ) internal view returns (bool) {
         return
-            SignatureChecker.isValidSignatureNow(
+            SignatureCheckerUpgradeable.isValidSignatureNow(
                 _userAddress,
                 _messageHash,
                 _userSignature
@@ -657,8 +664,8 @@ contract Swapper is Pausable, ReentrancyGuard {
         uint256 _userSellAmount
     ) internal view returns (bool) {
         bool isTransactionValid;
-        uint256 userBalance = IERC20(_userSellToken).balanceOf(_userAddress);
-        uint256 userAllowance = IERC20(_userSellToken).allowance(
+        uint256 userBalance = IERC20Upgradeable(_userSellToken).balanceOf(_userAddress);
+        uint256 userAllowance = IERC20Upgradeable(_userSellToken).allowance(
             _userAddress,
             address(this)
         );

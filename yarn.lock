@@ -858,47 +858,61 @@
   dependencies:
     solhint "^2.0.0"
 
-"@openzeppelin/contracts-upgradeable@^4.8.0":
-  version "4.9.2"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.9.2.tgz#a817c75688f8daede420052fbcb34e52482e769e"
-  integrity sha512-siviV3PZV/fHfPaoIC51rf1Jb6iElkYWnNYZ0leO23/ukXuvOyoC/ahy8jqiV7g+++9Nuo3n/rk5ajSN/+d/Sg==
+"@openzeppelin/contracts-upgradeable@^4.9.3":
+  version "4.9.3"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.9.3.tgz#ff17a80fb945f5102571f8efecb5ce5915cc4811"
+  integrity sha512-jjaHAVRMrE4UuZNfDwjlLGDxTHWIOwTJS2ldnc278a0gevfXfPr8hxKEVBGFBE96kl2G3VHDZhUimw/+G3TG2A==
 
 "@openzeppelin/contracts@^4.8.0":
   version "4.9.2"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.2.tgz#1cb2d5e4d3360141a17dbc45094a8cad6aac16c1"
   integrity sha512-mO+y6JaqXjWeMh9glYVzVu8HYPGknAAnWyxTRhGeckOruyXQMNnlcW6w/Dx9ftLeIQk6N+ZJFuVmTwF7lEIFrg==
 
-"@openzeppelin/defender-base-client@^1.46.0":
-  version "1.46.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/defender-base-client/-/defender-base-client-1.46.0.tgz#aa5177f8fbad23fd03d78f3dbe06664bbe9333ff"
-  integrity sha512-EMnVBcfE6ZN5yMxfaxrFF3eqyGp2RQp3oSRSRP+R3yuCRJf8VCc2ArdZf1QPmQQzbq70nl8EZa03mmAqPauNlQ==
+"@openzeppelin/defender-admin-client@^1.48.0":
+  version "1.48.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/defender-admin-client/-/defender-admin-client-1.48.0.tgz#acb8d6677a0b1bca463f9017aefaf4b6720123e1"
+  integrity sha512-MN29JD6jA3PgOxF2tG0aZbMIwOCieYWkK9UbHCq1UzGPrMgGV9NVMUyVdqpv7Ynplwsjp5ZTBDOyttwvTlchHg==
   dependencies:
-    amazon-cognito-identity-js "^6.0.1"
-    async-retry "^1.3.3"
-    axios "^0.21.2"
+    "@openzeppelin/defender-base-client" "1.48.0"
+    axios "^1.4.0"
+    ethers "^5.7.2"
     lodash "^4.17.19"
     node-fetch "^2.6.0"
 
-"@openzeppelin/hardhat-upgrades@^1.21.0":
-  version "1.28.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/hardhat-upgrades/-/hardhat-upgrades-1.28.0.tgz#6361f313a8a879d8a08a5e395acf0933bc190950"
-  integrity sha512-7sb/Jf+X+uIufOBnmHR0FJVWuxEs2lpxjJnLNN6eCJCP8nD0v+Ot5lTOW2Qb/GFnh+fLvJtEkhkowz4ZQ57+zQ==
+"@openzeppelin/defender-base-client@1.48.0", "@openzeppelin/defender-base-client@^1.48.0", "@openzeppelin/defender-base-client@^1.48.0-rc.1":
+  version "1.48.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/defender-base-client/-/defender-base-client-1.48.0.tgz#9103b1b036db0451b52d7899a277bf24db4c4b06"
+  integrity sha512-HFO87s010hRrMjyh2xYOCEAkLe21BfIbho7n5/kikA6A1ZgXi7MsEiqnQv1zP4bxMJgxGZ5b3t4tt6fWrakbag==
   dependencies:
-    "@openzeppelin/defender-base-client" "^1.46.0"
-    "@openzeppelin/platform-deploy-client" "^0.8.0"
+    amazon-cognito-identity-js "^6.0.1"
+    async-retry "^1.3.3"
+    axios "^1.4.0"
+    lodash "^4.17.19"
+    node-fetch "^2.6.0"
+
+"@openzeppelin/hardhat-upgrades@^2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/hardhat-upgrades/-/hardhat-upgrades-2.2.1.tgz#75452c1fb507144b189da80e7d7e5654488705a4"
+  integrity sha512-Amlk2nhNpCfTCEovbqyarwBv4ZWmuiHHIcYfGy+FCSkkuSvQNVEJHoSl83Vgag+QhMtubdoggkYPqayxU46w1Q==
+  dependencies:
+    "@openzeppelin/defender-admin-client" "^1.48.0"
+    "@openzeppelin/defender-base-client" "^1.48.0"
+    "@openzeppelin/platform-deploy-client" "^0.10.0"
     "@openzeppelin/upgrades-core" "^1.27.0"
     chalk "^4.1.0"
     debug "^4.1.1"
+    ethereumjs-util "^7.1.5"
     proper-lockfile "^4.1.1"
+    undici "^5.14.0"
 
-"@openzeppelin/platform-deploy-client@^0.8.0":
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/platform-deploy-client/-/platform-deploy-client-0.8.0.tgz#af6596275a19c283d6145f0128cc1247d18223c1"
-  integrity sha512-POx3AsnKwKSV/ZLOU/gheksj0Lq7Is1q2F3pKmcFjGZiibf+4kjGxr4eSMrT+2qgKYZQH1ZLQZ+SkbguD8fTvA==
+"@openzeppelin/platform-deploy-client@^0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/platform-deploy-client/-/platform-deploy-client-0.10.0.tgz#017599612ed3b898f94f281b378ac50626365617"
+  integrity sha512-jayQPeXqw4LnWIrNhNqgikJSre+n2NRrnEu76niSdVXc/faQkG3PmaHtRPJMFgsYxjjAiAfcMYyV95YBDuLexA==
   dependencies:
     "@ethersproject/abi" "^5.6.3"
-    "@openzeppelin/defender-base-client" "^1.46.0"
-    axios "^0.21.2"
+    "@openzeppelin/defender-base-client" "^1.48.0-rc.1"
+    axios "^1.4.0"
     lodash "^4.17.19"
     node-fetch "^2.6.0"
 
@@ -1808,12 +1822,14 @@ axios@1.1.2:
     form-data "^4.0.0"
     proxy-from-env "^1.1.0"
 
-axios@^0.21.2:
-  version "0.21.4"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
-  integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
+axios@^1.4.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.5.0.tgz#f02e4af823e2e46a9768cfc74691fdd0517ea267"
+  integrity sha512-D4DdjDo5CY50Qms0qGQTTw6Q44jl7zRwY7bthds06pUGfChBCTcQs+N743eFWGEd6pRTMd6A+I87aWyFV5wiZQ==
   dependencies:
-    follow-redirects "^1.14.0"
+    follow-redirects "^1.15.0"
+    form-data "^4.0.0"
+    proxy-from-env "^1.1.0"
 
 balanced-match@^1.0.0:
   version "1.0.2"
@@ -3527,7 +3543,7 @@ ethers@^4.0.32, ethers@^4.0.40:
     uuid "2.0.1"
     xmlhttprequest "1.8.0"
 
-ethers@^5.4.7, ethers@^5.7.1:
+ethers@^5.4.7, ethers@^5.7.1, ethers@^5.7.2:
   version "5.7.2"
   resolved "https://registry.yarnpkg.com/ethers/-/ethers-5.7.2.tgz#3a7deeabbb8c030d4126b24f84e525466145872e"
   integrity sha512-wswUsmWo1aOK8rR7DIKiWSw9DbLWe6x98Jrn8wcTflTVvaXhAMaB5zGAXy0GYQEQp9iO1iSHWVyARQm11zUtyg==
@@ -3890,7 +3906,7 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.7.tgz#609f39207cb614b89d0765b477cb2d437fbf9787"
   integrity sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==
 
-follow-redirects@^1.12.1, follow-redirects@^1.14.0, follow-redirects@^1.15.0:
+follow-redirects@^1.12.1, follow-redirects@^1.15.0:
   version "1.15.2"
   resolved "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.15.2.tgz"
   integrity sha512-VQLG33o04KaQ8uYi2tVNbdrWp1QWxNNea+nmIB4EVM28v0hmP17z7aG1+wAkNzVq4KeXTq3221ye5qTJP91JwA==
