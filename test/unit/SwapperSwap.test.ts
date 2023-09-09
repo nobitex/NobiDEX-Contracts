@@ -10,7 +10,7 @@ describe('swapper', function () {
   describe('`Swap` Functionality', async function () {
     it('should emit TranactionCreated events', async function () {
       // arrange
-      const { gnosis, swapper, token1, token2, token3, token4 } = await loadFixture(deployContracts)
+      const { gnosis, proxy, token1, token2, token3, token4 } = await loadFixture(deployContracts)
       const { deployer, daoMember1, daoMember2, daoMember3, daoMember4, daoMember5 } = await getAccounts()
 
       // contracts variables
@@ -185,10 +185,10 @@ describe('swapper', function () {
       await transferSomeTokens(_tokens, _amounts, _callers)
 
       // base allowances
-      await token1.connect(daoMember1).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
-      await token2.connect(daoMember2).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
-      await token3.connect(daoMember3).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
-      await token4.connect(daoMember4).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
+      await token1.connect(daoMember1).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
+      await token2.connect(daoMember2).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
+      await token3.connect(daoMember3).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
+      await token4.connect(daoMember4).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
 
       //fee and sell amounts calculations
       const takerFee = (Number(MatchedOrders[0].makerTotalSellAmount) * Number(MatchedOrders[0].takerFeeRatio)) / 1000
@@ -207,10 +207,10 @@ describe('swapper', function () {
       const adminT4preTxBalance = await token4.balanceOf(gnosis.address)
 
       //add the caller into broker addresses mappings
-      await swapper.connect(daoMember1).registerBrokers([deployer.address])
+      await proxy.connect(daoMember1).registerBrokers([deployer.address])
 
       //broadcast the batchOrders to the contract
-      await swapper.connect(deployer).Swap(MatchedOrders)
+      await proxy.connect(deployer).Swap(MatchedOrders)
 
       // post transaction balances
       const app3T3postTxBalance = await token3.balanceOf(daoMember3.address)
@@ -247,7 +247,7 @@ describe('swapper', function () {
       // uint16 private constant ZERO_TRANSFER_AMOUNT_ERROR_CODE = 406;
 
       // event data
-      const tx = await swapper.Swap(MatchedOrders)
+      const tx = await proxy.Swap(MatchedOrders)
       const transactionReceipt = await tx.wait()
       const events = transactionReceipt.events
 
@@ -261,11 +261,11 @@ describe('swapper', function () {
 
     it('should emit TranactionCreated event', async function () {
       // arrange
-      const { swapper, token1, token2, token3, token4 } = await loadFixture(deployContracts)
+      const { proxy, token1, token2, token3, token4 } = await loadFixture(deployContracts)
       const { deployer, daoMember1, daoMember2, daoMember3, daoMember4 } = await getAccounts()
 
       // contract variables
-      const maxFeeRatio = await swapper.maxFeeRatio()
+      const maxFeeRatio = await proxy.maxFeeRatio()
       const provider = hre.ethers.provider
       await provider.ready
       const network = await provider.getNetwork()
@@ -347,15 +347,15 @@ describe('swapper', function () {
       await transferSomeTokens(_tokens, _amounts, _callers)
 
       // base allowances
-      await token1.connect(daoMember1).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
-      await token2.connect(daoMember2).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
-      await token3.connect(daoMember3).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
-      await token4.connect(daoMember4).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
+      await token1.connect(daoMember1).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
+      await token2.connect(daoMember2).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
+      await token3.connect(daoMember3).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
+      await token4.connect(daoMember4).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
 
       // adding caller to the brokerAddressees mapping
-      await swapper.connect(daoMember1).registerBrokers([deployer.address])
+      await proxy.connect(daoMember1).registerBrokers([deployer.address])
       // broadcast the order to the contract
-      const tx = await swapper.connect(deployer).Swap(MatchedOrders)
+      const tx = await proxy.connect(deployer).Swap(MatchedOrders)
 
       // event data
       const transactionReceipt = await tx.wait()
@@ -371,11 +371,11 @@ describe('swapper', function () {
     })
     it('should revert if msg.sender is not a caller', async function () {
       // arrange
-      const { swapper, token1, token2, token3, token4 } = await loadFixture(deployContracts)
+      const { proxy, token1, token2, token3, token4 } = await loadFixture(deployContracts)
       const { daoMember1, daoMember2, daoMember3, daoMember4,  daoMember6 } = await getAccounts()
 
       // contract variables
-      const maxFeeRatio = await swapper.maxFeeRatio()
+      const maxFeeRatio = await proxy.maxFeeRatio()
       const provider = hre.ethers.provider
       await provider.ready
       const network = await provider.getNetwork()
@@ -455,12 +455,12 @@ describe('swapper', function () {
       await transferSomeTokens(_tokens, _amounts, _callers)
 
       // base allowances
-      await token1.connect(daoMember1).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
-      await token2.connect(daoMember2).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
-      await token3.connect(daoMember3).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
-      await token4.connect(daoMember4).increaseAllowance(swapper.address, 1000n * 10n ** 18n)
+      await token1.connect(daoMember1).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
+      await token2.connect(daoMember2).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
+      await token3.connect(daoMember3).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
+      await token4.connect(daoMember4).increaseAllowance(proxy.address, 1000n * 10n ** 18n)
       //asserts
-      await expect(swapper.connect(daoMember6).Swap(MatchedOrders)).to.be.revertedWith(
+      await expect(proxy.connect(daoMember6).Swap(MatchedOrders)).to.be.revertedWith(
         'ERROR: unauthorized caller'
       )
     })
