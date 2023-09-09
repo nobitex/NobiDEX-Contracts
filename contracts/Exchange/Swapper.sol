@@ -131,13 +131,13 @@ contract Swapper is
      *@dev Sets the values for {MaxFeeRatio} and {Moderator} and {brokersAddresses} mapping.
      *
      */
-    constructor(
+    function initialize(
         address payable _moderator,
         address[] memory _brokers,
         uint32 _FeeRatioDenominator,
         uint16 _maxFeeRatio,
         uint8 _version
-    ) {
+    ) public initializer onlyProxy {
         maxFeeRatio = _maxFeeRatio;
         Moderator = _moderator;
         FeeRatioDenominator = _FeeRatioDenominator;
