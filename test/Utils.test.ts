@@ -8,9 +8,11 @@ export async function deployContracts() {
 
   const { proxy } = await deploySwapper(gnosis.address);
 
+  const SwapperUpgrade : Contract = await deploySwapperUpgradable(gnosis.address)
+
   // deploying 4 mock erc20 tokens
   const { token1, token2, token3, token4 } = await deployERC20();
-  return { gnosis, proxy, token1, token2, token3, token4 };
+  return { gnosis, proxy,SwapperUpgrade, token1, token2, token3, token4 };
 }
 
 export async function getAccounts() {
@@ -70,6 +72,21 @@ async function deploySwapper(multiSig: string) {
   await proxy.deployed();
   return { proxy };
 }
+
+async function deploySwapperUpgradable(multiSig: string) {
+  const { daoMember1, daoMember2, daoMember3, daoMember4 } = await getAccounts()
+
+  const SwapperUpgrade = await ethers.getContractFactory('SwapperUpgrade')
+  const swapper = await SwapperUpgrade.deploy(multiSig, [
+    daoMember1.address,
+    daoMember2.address,
+    daoMember3.address,
+    daoMember4.address,
+  ], 1000 , defaultFee, 3 )
+  await swapper.deployed()
+  return swapper
+}
+
 
 async function deployGnosisMock() {
   const { daoMember1, daoMember2, daoMember3, daoMember4 } =
