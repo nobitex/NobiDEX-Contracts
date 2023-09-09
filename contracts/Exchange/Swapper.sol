@@ -47,7 +47,7 @@ contract Swapper is
     // SUCCESSFUL SWAP 200 (OK)
     // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
-    uint16[6] errorCodes = [402, 410, 408, 417, 401];
+    uint16[6] errorCodes ;
     uint16 private constant SUCCESSFUL_SWAP_CODE = 200;
 
     /// @dev brokersAddresses are the only addresses that are allowed to call the Swap function
@@ -138,6 +138,7 @@ contract Swapper is
         uint16 _maxFeeRatio,
         uint8 _version
     ) public initializer onlyProxy {
+        errorCodes = [402, 410, 408, 417, 401];
         maxFeeRatio = _maxFeeRatio;
         Moderator = _moderator;
         FeeRatioDenominator = _FeeRatioDenominator;

@@ -6,8 +6,8 @@
   "dependencies": {
     "@gnosis.pm/safe-deployments": "^1.19.0",
     "@openzeppelin/contracts": "^4.8.0",
-    "@openzeppelin/contracts-upgradeable": "^4.9.3",
-    "@openzeppelin/hardhat-upgrades": "^2.2.1",
+    "@openzeppelin/contracts-upgradeable": "^4.8.0",
+    "@openzeppelin/hardhat-upgrades": "^1.21.0",
     "@typescript-eslint/eslint-plugin": "^5.59.2",
     "@typescript-eslint/parser": "^5.59.2",
     "@wagmi/chains": "^1.1.0",
