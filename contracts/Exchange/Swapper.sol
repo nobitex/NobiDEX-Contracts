@@ -35,9 +35,9 @@ contract Swapper is
      */
     address public Moderator;
     address public candidateModerator;
-    uint32 public immutable FeeRatioDenominator;
+    uint32 public FeeRatioDenominator;
     uint16 public maxFeeRatio;
-    uint8 public immutable version;
+    uint8 public version;
     // status codes
     // Low Balance Or Allowance ERROR  402 (Payment Required)
     // Cancelled order ERROR 410 (Gone)
@@ -171,7 +171,7 @@ contract Swapper is
 
     function Swap(
         MatchedOrders[] calldata matchedOrders
-    ) external virtual whenNotPaused isBroker nonReentrant {
+    ) external virtual whenNotPaused isBroker nonReentrant onlyProxy {
         SwapStatus[] memory batchExecuteStatus = new SwapStatus[](
             matchedOrders.length
         );
@@ -365,10 +365,12 @@ contract Swapper is
                 uint256 EthBalance = address(this).balance;
                 payable(Moderator).transfer(EthBalance);
             } else {
-                uint256 balance = IERC20Upgradeable(tokenAddresses[i]).balanceOf(
-                    address(this)
+                uint256 balance = IERC20Upgradeable(tokenAddresses[i])
+                    .balanceOf(address(this));
+                IERC20Upgradeable(tokenAddresses[i]).safeTransfer(
+                    Moderator,
+                    balance
                 );
-                IERC20Upgradeable(tokenAddresses[i]).safeTransfer(Moderator, balance);
             }
 
             unchecked {
@@ -558,26 +560,26 @@ contract Swapper is
         uint256 _makerFee
     ) internal {
         IERC20Upgradeable(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
-            _matchedOrder.makerUserAddress,
-            _matchedOrder.takerUserAddress,
-            _matchedOrder.makerTotalSellAmount - _takerFee
-        );
+                _matchedOrder.makerUserAddress,
+                _matchedOrder.takerUserAddress,
+                _matchedOrder.makerTotalSellAmount - _takerFee
+            );
         IERC20Upgradeable(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
-            _matchedOrder.takerUserAddress,
-            _matchedOrder.makerUserAddress,
-            _matchedOrder.takerTotalSellAmount - _makerFee
-        );
+                _matchedOrder.takerUserAddress,
+                _matchedOrder.makerUserAddress,
+                _matchedOrder.takerTotalSellAmount - _makerFee
+            );
 
         IERC20Upgradeable(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
-            _matchedOrder.makerUserAddress,
-            Moderator,
-            _takerFee
-        );
+                _matchedOrder.makerUserAddress,
+                Moderator,
+                _takerFee
+            );
         IERC20Upgradeable(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
-            _matchedOrder.takerUserAddress,
-            Moderator,
-            _makerFee
-        );
+                _matchedOrder.takerUserAddress,
+                Moderator,
+                _makerFee
+            );
     }
 
     /**
@@ -664,7 +666,9 @@ contract Swapper is
         uint256 _userSellAmount
     ) internal view returns (bool) {
         bool isTransactionValid;
-        uint256 userBalance = IERC20Upgradeable(_userSellToken).balanceOf(_userAddress);
+        uint256 userBalance = IERC20Upgradeable(_userSellToken).balanceOf(
+            _userAddress
+        );
         uint256 userAllowance = IERC20Upgradeable(_userSellToken).allowance(
             _userAddress,
             address(this)
@@ -678,5 +682,14 @@ contract Swapper is
             isTransactionValid = false;
         }
         return isTransactionValid;
+    }
+
+    function _authorizeUpgrade(
+        address _newImplementation
+    ) internal override isModerator {
+        require(
+            _newImplementation != address(0),
+            "ERROR: upgrade to zero address"
+        );
     }
 }
