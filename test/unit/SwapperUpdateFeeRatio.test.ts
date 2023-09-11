@@ -1,11 +1,18 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { deployContracts, getAccounts } from "../Utils.test";
+import {
+  deployContracts,
+  deployGnosisContract,
+} from "../Utils.test";
+import { Contract, ethers } from "ethers";
 const defaultFee = 20;
 describe("Swapper - updateSwapperFee", function () {
+  let gnosis: Contract, proxy: ethers.Contract;
+
+  beforeEach(async function () {
+    gnosis = (await deployGnosisContract()).gnosis;
+    proxy = (await deployContracts(gnosis.address)).proxy;
+  });
   it("should set swapper fee to non-zero value 5", async function () {
-    // arrange
-    const { proxy, gnosis } = await loadFixture(deployContracts);
     // fetch current fee
     const currentFee = await proxy.maxFeeRatio();
     // double check values
@@ -19,19 +26,15 @@ describe("Swapper - updateSwapperFee", function () {
     expect(newFee).to.equal(5);
   });
   it("should revert if external call fails", async function () {
-    // arrange
-    const { gnosis, proxy } = await loadFixture(deployContracts);
     // fetch current fee
     const currentFee = await proxy.maxFeeRatio();
     expect(currentFee).to.equal(defaultFee);
     // assert
-    await expect(
-      gnosis.updateSwapperFee(proxy.address, 20)
-    ).to.be.revertedWith("ERROR: external call failed");
+    await expect(gnosis.updateSwapperFee(proxy.address, 20)).to.be.revertedWith(
+      "ERROR: external call failed"
+    );
   });
   it("should revert if caller is not admin", async function () {
-    // arrange
-    const { proxy } = await loadFixture(deployContracts);
     // fetch current fee
     const currentFee = await proxy.maxFeeRatio();
     // double check values
