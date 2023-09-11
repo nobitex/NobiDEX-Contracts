@@ -54,15 +54,15 @@ contract GnosisMock {
         require(success, "ERROR: external call failed");
     }
 
-    function updateSwapperModerator(
-        address _swapper,
-        address[] memory _tokenAddresses
-    ) external {
-        (bool success, bytes memory data) = _swapper.call(
-            abi.encodeWithSignature("pause(address[])  ", _tokenAddresses)
-        );
-        require(success, "ERROR: external call failed");
-    }
+    // // function updateSwapperModerator(
+    // //     address _swapper,
+    // //     address[] memory _tokenAddresses
+    // // ) external {
+    // //     (bool success, bytes memory data) = _swapper.call(
+    // //         abi.encodeWithSignature("pause(address[])  ", _tokenAddresses)
+    // //     );
+    // //     require(success, "ERROR: external call failed");
+    // }
 
     function upgradeSwapper(
         address _swapper,
@@ -71,17 +71,20 @@ contract GnosisMock {
         (bool success, bytes memory data) = _swapper.call(
             abi.encodeWithSignature("upgradeTo(address)", _implementation)
         );
-        // console.logBytes(data);
-        // uint256 decodedData;
-        // assembly {
-        //     decodedData := mload(add(data, 0x20))
+        // if (!success) {
+        //     // Ensure that the result contains at least 4 bytes (selector + revert reason length)
+        //     require(data.length >= 4, "Revert reason not found");
+
+        //     // Skip the first 4 bytes (selector)
+        //     assembly {
+        //         data := add(data, 0x04)
+        //     }
+
+        //     // Decode the revert reason
+        //     string memory revertReason = abi.decode(data, (string));
+
+        //     // console.log(revertReason);
         // }
-        // console.log(decodedData);
-        console.log("11");
-        (bytes32 errorMessage) = abi.decode(data, (bytes32));
-        console.log("111");
-        console.log(errorMessage);
-        console.log("111");
         require(success, "ERROR: external call failed.");
     }
 
