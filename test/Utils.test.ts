@@ -2,17 +2,20 @@ import { BigNumber, Contract } from "ethers";
 import hre, { ethers, upgrades } from "hardhat";
 const defaultFee = 20;
 
-export async function deployContracts() {
+export async function deployContracts(moderator: string) {
   // deploys swapper
-  const gnosis: Contract = await deployGnosisMock();
 
-  const { proxy } = await deploySwapper(gnosis.address);
-
-  const SwapperUpgrade : Contract = await deploySwapperUpgradable()
+  const { proxy } = await deploySwapper(moderator);
 
   // deploying 4 mock erc20 tokens
   const { token1, token2, token3, token4 } = await deployERC20();
-  return { gnosis, proxy,SwapperUpgrade, token1, token2, token3, token4 };
+  return { proxy, token1, token2, token3, token4 };
+}
+export async function deployGnosisContract() {
+  // deploys swapper
+  const gnosis: Contract = await deployGnosisMock();
+
+  return { gnosis };
 }
 
 export async function getAccounts() {
@@ -73,16 +76,8 @@ async function deploySwapper(multiSig: string) {
   return { proxy };
 }
 
-async function deploySwapperUpgradable() {
 
-  const SwapperUpgrade = await ethers.getContractFactory('SwapperUpgrade')
-  const swapperUpgrade = await SwapperUpgrade.deploy()
-  await swapperUpgrade.deployed()
-  return swapperUpgrade
-}
-
-
-async function deployGnosisMock() {
+export async function deployGnosisMock() {
   const { daoMember1, daoMember2, daoMember3, daoMember4 } =
     await getAccounts();
 
