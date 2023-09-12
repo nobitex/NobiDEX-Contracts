@@ -1,44 +1,47 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
-import { deployContracts, getAccounts } from "../Utils.test";
+import {
+  deployContracts,
+  deployGnosisContract,
+} from "../Utils.test";
+import { Contract, ethers } from "ethers";
 const defaultFee = 20;
 describe("Swapper - updateSwapperFee", function () {
+  let gnosis: Contract, proxy: ethers.Contract;
+
+  beforeEach(async function () {
+    gnosis = (await deployGnosisContract()).gnosis;
+    proxy = (await deployContracts(gnosis.address)).proxy;
+  });
   it("should set swapper fee to non-zero value 5", async function () {
-    // arrange
-    const { swapper, gnosis } = await loadFixture(deployContracts);
     // fetch current fee
-    const currentFee = await swapper.maxFeeRatio();
+    const currentFee = await proxy.maxFeeRatio();
     // double check values
     expect(currentFee).to.equal(defaultFee);
 
     // create a  transaction
-    await gnosis.updateSwapperFee(swapper.address, 5);
+    await gnosis.updateSwapperFee(proxy.address, 5);
 
     // fetch new fee
-    const newFee = await swapper.maxFeeRatio();
+    const newFee = await proxy.maxFeeRatio();
     expect(newFee).to.equal(5);
   });
   it("should revert if external call fails", async function () {
-    // arrange
-    const { gnosis, swapper } = await loadFixture(deployContracts);
     // fetch current fee
-    const currentFee = await swapper.maxFeeRatio();
+    const currentFee = await proxy.maxFeeRatio();
     expect(currentFee).to.equal(defaultFee);
     // assert
-    await expect(
-      gnosis.updateSwapperFee(swapper.address, 20)
-    ).to.be.revertedWith("ERROR: external call failed");
+    await expect(gnosis.updateSwapperFee(proxy.address, 20)).to.be.revertedWith(
+      "ERROR: external call failed"
+    );
   });
   it("should revert if caller is not admin", async function () {
-    // arrange
-    const { swapper } = await loadFixture(deployContracts);
     // fetch current fee
-    const currentFee = await swapper.maxFeeRatio();
+    const currentFee = await proxy.maxFeeRatio();
     // double check values
     expect(currentFee).to.equal(defaultFee);
     // assert
 
-    await expect(swapper.updateFeeRatio(5)).to.be.revertedWith(
+    await expect(proxy.updateFeeRatio(5)).to.be.revertedWith(
       "ERROR: unauthorized caller"
     );
   });

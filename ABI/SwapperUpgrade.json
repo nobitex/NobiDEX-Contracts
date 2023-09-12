@@ -23,6 +23,7 @@
   "function proxiableUUID() view returns (bytes32)",
   "function registerBrokers(address[])",
   "function revokeOrder(tuple(uint16,uint64,uint64,uint256,uint256,uint256,address,address),bytes)",
+  "function testUpgradeability() view returns (address)",
   "function unpause()",
   "function unregisterBrokers(address[])",
   "function updateFeeRatio(uint16)",

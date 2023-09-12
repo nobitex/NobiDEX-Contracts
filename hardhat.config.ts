@@ -4,6 +4,7 @@ import '@nomicfoundation/hardhat-toolbox'
 // import '@openzeppelin/hardhat-upgrades'
 import 'hardhat-gas-reporter'
 import '@nomiclabs/hardhat-solhint'
+import '@openzeppelin/hardhat-upgrades';
 import '@typechain/hardhat'
 import 'hardhat-abi-exporter'
 import 'solidity-coverage'

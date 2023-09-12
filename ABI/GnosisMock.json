@@ -4,5 +4,5 @@
   "function proposeToUpdateSwapperModerator(address,address)",
   "function unpauseSwapper(address)",
   "function updateSwapperFee(address,uint16)",
-  "function updateSwapperModerator(address,address[])"
+  "function upgradeSwapper(address,address)"
 ]

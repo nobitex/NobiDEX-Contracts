@@ -1,37 +1,35 @@
 import { expect } from "chai";
-import { Contract, ethers } from "ethers";
-import hre from "hardhat";
-
+import { ethers } from "hardhat";
 import {
   deployContracts,
   getAccounts,
   transferSomeTokens,
   createMsgHash,
   deployGnosisContract,
+  deployProxyUpgrade,
 } from "../Utils.test";
+import { Contract } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
-describe("swapper", function () {
+describe("Proxy - Upgradability", function () {
   let gnosis: Contract,
-    token1: Contract,
-    token2: Contract,
-    token3: Contract,
-    token4: Contract,
-    deployer: SignerWithAddress,
-    daoMember1: SignerWithAddress,
-    daoMember2: SignerWithAddress,
-    daoMember3: SignerWithAddress,
-    daoMember4: SignerWithAddress,
-    daoMember5: SignerWithAddress,
-    daoMember6: SignerWithAddress,
-    proxy: ethers.Contract,
-    provider: ethers.providers.JsonRpcProvider,
-    maxFeeRatio: number,
-    chainID: number;
+  proxy: Contract,
+  swapperUpgrade: Contract,
+  token1: Contract,
+  token2: Contract,
+  token3: Contract,
+  token4: Contract,
+  deployer: SignerWithAddress,
+  daoMember1: SignerWithAddress,
+  daoMember2: SignerWithAddress,
+  daoMember3: SignerWithAddress,
+  daoMember4: SignerWithAddress,
+  daoMember5: SignerWithAddress;
 
   beforeEach(async function () {
     gnosis = (await deployGnosisContract()).gnosis;
     proxy = (await deployContracts(gnosis.address)).proxy;
+    swapperUpgrade = (await deployProxyUpgrade()).swapperUpgrade;
     token1 = (await deployContracts(gnosis.address)).token1;
     token2 = (await deployContracts(gnosis.address)).token2;
     token3 = (await deployContracts(gnosis.address)).token3;
@@ -42,17 +40,58 @@ describe("swapper", function () {
     daoMember3 = (await getAccounts()).daoMember3;
     daoMember4 = (await getAccounts()).daoMember4;
     daoMember5 = (await getAccounts()).daoMember5;
-    daoMember6 = (await getAccounts()).daoMember6;
-    provider = hre.ethers.provider;
-    await provider.ready;
-    // contract variables
-     maxFeeRatio = await proxy.maxFeeRatio();
-     const network = await provider.getNetwork();
-     chainID = network.chainId;
+    
   });
-  describe("`Swap` Functionality", async function () {
+
+  describe("`swapper upgradability` Functionality", async function () {
+    it("should upgrade successfully", async function () {
+      const proxyAddress = proxy.address;
+
+      await gnosis.upgradeSwapper(proxy.address, swapperUpgrade.address);
+
+      const swapperUpgraded = await ethers.getContractFactory("SwapperUpgrade");
+      proxy = await swapperUpgraded.attach(proxy.address);
+
+      // assert
+
+      const newAddress = await proxy.testUpgradeability();
+      expect(newAddress).to.be.equal(proxyAddress);
+    });
+    it("should revert if caller is not a dao member", async function () {
+      await expect(proxy.upgradeTo(swapperUpgrade.address)).to.be.revertedWith(
+        "ERROR: unauthorized caller"
+      );
+    });
+    it("should revert if implementation address is zero", async function () {
+      const zeroAdd = ethers.constants.AddressZero;
+
+      await expect(
+        gnosis.upgradeSwapper(proxy.address, zeroAdd)
+      ).to.be.revertedWith("ERROR: external call failed.");
+    });
+    it("should check the Data Migration", async function () {
+      const proxyAddress = proxy.address;
+
+      await gnosis.upgradeSwapper(proxy.address, swapperUpgrade.address);
+
+      const swapperUpgraded = await ethers.getContractFactory("SwapperUpgrade");
+      proxy = await swapperUpgraded.attach(proxy.address);
+
+      // assert
+
+      const newAddress = await proxy.testUpgradeability();
+      expect(newAddress).to.be.equal(proxyAddress);
+      expect(await proxy.maxFeeRatio()).to.be.equal(20);
+    });
     it("should emit TranactionCreated events", async function () {
-      //executeSwap functions input(orders)
+
+     // upgrade the contract
+      await gnosis.upgradeSwapper(proxy.address, swapperUpgrade.address);
+
+      const swapperUpgraded = await ethers.getContractFactory("SwapperUpgrade");
+      proxy = await swapperUpgraded.attach(proxy.address);
+
+      // check some orders
 
       const MatchedOrders = [
         {
@@ -321,250 +360,6 @@ describe("swapper", function () {
           eventsExpectedArguments[i][1]
         );
       }
-    });
-
-    it("should emit TranactionCreated event", async function () {
-      // arrange
-
-      //executeSwap functions input(order)
-      const MatchedOrders = [
-        {
-          makerFeeRatio: 10,
-          takerFeeRatio: 20,
-          makerOrderID: 1234,
-          takerOrderID: 4321,
-          makerValidUntil: 1000,
-          takerValidUntil: 1000,
-          matchID: 1,
-          makerRatioSellArg: 3n * 10n ** 18n,
-          makerRatioBuyArg: 600n * 10n ** 18n,
-          takerRatioSellArg: 650n * 10n ** 18n,
-          takerRatioBuyArg: 3n * 10n ** 18n,
-          makerTotalSellAmount: 1n * 10n ** 18n,
-          takerTotalSellAmount: 200n * 10n ** 18n,
-          makerSellTokenAddress: token3.address,
-          takerSellTokenAddress: token4.address,
-          makerUserAddress: daoMember3.address,
-          takerUserAddress: daoMember4.address,
-          makerSignature: "",
-          takerSignature: "",
-        },
-      ];
-
-      // creating message arguments
-      const makermessageHash = ethers.utils.solidityKeccak256(
-        [
-          "uint16",
-          "uint64",
-          "uint64",
-          "uint256",
-          "uint256",
-          "address",
-          "address",
-        ],
-        [
-          maxFeeRatio,
-          MatchedOrders[0].makerValidUntil,
-          chainID,
-          MatchedOrders[0].makerRatioSellArg,
-          MatchedOrders[0].makerRatioBuyArg,
-          MatchedOrders[0].makerSellTokenAddress,
-          MatchedOrders[0].takerSellTokenAddress,
-        ]
-      );
-      //creating the wrong msg hash by swapping the takerRatioSellArg with makerRatioSellArg
-      const takermessageHash = ethers.utils.solidityKeccak256(
-        [
-          "uint16",
-          "uint64",
-          "uint64",
-          "uint256",
-          "uint256",
-          "address",
-          "address",
-        ],
-        [
-          maxFeeRatio,
-          MatchedOrders[0].takerValidUntil,
-          chainID,
-          MatchedOrders[0].makerRatioSellArg,
-          MatchedOrders[0].takerRatioBuyArg,
-          MatchedOrders[0].takerSellTokenAddress,
-          MatchedOrders[0].makerSellTokenAddress,
-        ]
-      );
-
-      const makerMessageHashBinary = ethers.utils.arrayify(makermessageHash);
-      const takerMessageHashBinary = ethers.utils.arrayify(takermessageHash);
-
-      const makerSignature = await daoMember3.signMessage(
-        makerMessageHashBinary
-      );
-      const takerSignature = await daoMember4.signMessage(
-        takerMessageHashBinary
-      );
-
-      //adding signatures
-      MatchedOrders[0].makerSignature = makerSignature;
-      MatchedOrders[0].takerSignature = takerSignature;
-
-      //base transfers
-      const _amounts = [
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-      ];
-      const _tokens = [token1, token2, token3, token4];
-
-      const _callers = [daoMember1, daoMember2, daoMember3, daoMember4];
-
-      await transferSomeTokens(_tokens, _amounts, _callers);
-
-      // base allowances
-      await token1
-        .connect(daoMember1)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token2
-        .connect(daoMember2)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token3
-        .connect(daoMember3)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token4
-        .connect(daoMember4)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-
-      // adding caller to the brokerAddressees mapping
-      await proxy.connect(daoMember1).registerBrokers([deployer.address]);
-      // broadcast the order to the contract
-      const tx = await proxy.connect(deployer).Swap(MatchedOrders);
-
-      // event data
-      const transactionReceipt = await tx.wait();
-      const events = transactionReceipt.events;
-      const expectedMatchID = ethers.BigNumber.from(1);
-      //predict the event data
-      const expectedStatusCode = 401;
-
-      //assert
-      // compare the event data with the predicted values
-
-      expect(events[0].args[0][0][0]).to.equals(expectedMatchID);
-      expect(events[0].args[0][0][1]).to.equals(expectedStatusCode);
-    });
-    it("should revert if msg.sender is not a caller", async function () {
-      //executeSwap functions input(order)
-      const MatchedOrders = [
-        {
-          makerFeeRatio: 10,
-          takerFeeRatio: 20,
-          makerOrderID: 1234,
-          takerOrderID: 4321,
-          makerValidUntil: 100,
-          takerValidUntil: 100,
-          matchID: 1,
-          makerRatioSellArg: 3n * 10n ** 18n,
-          makerRatioBuyArg: 600n * 10n ** 18n,
-          takerRatioSellArg: 650n * 10n ** 18n,
-          takerRatioBuyArg: 3n * 10n ** 18n,
-          makerTotalSellAmount: 1n * 10n ** 18n,
-          takerTotalSellAmount: 200n * 10n ** 18n,
-          makerSellTokenAddress: token3.address,
-          takerSellTokenAddress: token4.address,
-          makerUserAddress: daoMember3.address,
-          takerUserAddress: daoMember4.address,
-          makerSignature: "",
-          takerSignature: "",
-        },
-      ];
-
-      // creating message arguments
-      const makermessageHash = ethers.utils.solidityKeccak256(
-        [
-          "uint16",
-          "uint64",
-          "uint64",
-          "uint256",
-          "uint256",
-          "address",
-          "address",
-        ],
-        [
-          maxFeeRatio,
-          MatchedOrders[0].makerValidUntil,
-          chainID,
-          MatchedOrders[0].makerRatioSellArg,
-          MatchedOrders[0].makerRatioBuyArg,
-          MatchedOrders[0].makerSellTokenAddress,
-          MatchedOrders[0].takerSellTokenAddress,
-        ]
-      );
-      const takermessageHash = ethers.utils.solidityKeccak256(
-        [
-          "uint16",
-          "uint64",
-          "uint64",
-          "uint256",
-          "uint256",
-          "address",
-          "address",
-        ],
-        [
-          maxFeeRatio,
-          MatchedOrders[0].takerValidUntil,
-          chainID,
-          MatchedOrders[0].makerRatioSellArg,
-          MatchedOrders[0].takerRatioBuyArg,
-          MatchedOrders[0].takerSellTokenAddress,
-          MatchedOrders[0].makerSellTokenAddress,
-        ]
-      );
-
-      const makerMessageHashBinary = ethers.utils.arrayify(makermessageHash);
-      const takerMessageHashBinary = ethers.utils.arrayify(takermessageHash);
-
-      const makerSignature = await daoMember3.signMessage(
-        makerMessageHashBinary
-      );
-      const takerSignature = await daoMember4.signMessage(
-        takerMessageHashBinary
-      );
-
-      //adding signatures
-      MatchedOrders[0].makerSignature = makerSignature;
-      MatchedOrders[0].takerSignature = takerSignature;
-
-      //base transfers
-      const _amounts = [
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-      ];
-      const _tokens = [token1, token2, token3, token4];
-
-      const _callers = [daoMember1, daoMember2, daoMember3, daoMember4];
-
-      await transferSomeTokens(_tokens, _amounts, _callers);
-
-      // base allowances
-      await token1
-        .connect(daoMember1)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token2
-        .connect(daoMember2)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token3
-        .connect(daoMember3)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token4
-        .connect(daoMember4)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      //asserts
-      await expect(
-        proxy.connect(daoMember6).Swap(MatchedOrders)
-      ).to.be.revertedWith("ERROR: unauthorized caller");
     });
   });
 });
