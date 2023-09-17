@@ -11,7 +11,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "hardhat/console.sol";
 
-
 /// @title A trustless off-chain orderbook-based DEX
 /// @author nobidex team
 /// @notice Only a group of preApproved addresses(brokers) are allowed to Swap assets directly from the contract
@@ -40,6 +39,15 @@ contract Swapper is
     uint32 public FeeRatioDenominator;
     uint16 public maxFeeRatio;
     uint8 public version;
+
+    // EIP-712 Domain Separator
+    bytes32 public DOMAIN_SEPARATOR;
+
+    bytes32 constant ORDER_TYPEHASH =
+        keccak256(
+            "OrderParameters(uint16 maxFeeRatio,uint64 orderID,uint64 validUntil, uint256 chainID,uint256 ratioSellArg,uint256 ratioBuyArg,address sellTokenAddress,address buyTokenAddress)"
+        );
+
     // status codes
     // Low Balance Or Allowance ERROR  402 (Payment Required)
     // Cancelled order ERROR 410 (Gone)
@@ -49,7 +57,7 @@ contract Swapper is
     // SUCCESSFUL SWAP 200 (OK)
     // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
-    uint16[6] errorCodes ;
+    uint16[6] errorCodes;
     uint16 private constant SUCCESSFUL_SWAP_CODE = 200;
 
     /// @dev brokersAddresses are the only addresses that are allowed to call the Swap function
@@ -89,7 +97,7 @@ contract Swapper is
         uint16 statusCode;
     }
 
-    struct MessageParameters {
+    struct OrderParameters {
         uint16 maxFeeRatio;
         uint64 orderID;
         uint64 validUntil;
@@ -324,16 +332,16 @@ contract Swapper is
      * them off-chain through the dex itself,
      *
      * @dev orderCancelled event is emitted with the msg.sender(users address) and the users orderID the wish to cancel,
-     * @param _messageParameters is the ID of the order the user wish to cancel.
+     * @param _orderParameters is the ID of the order the user wish to cancel.
      *
      */
 
     function revokeOrder(
-        MessageParameters memory _messageParameters,
+        OrderParameters memory _orderParameters,
         bytes memory _signature
     ) external whenNotPaused {
-        uint64 orderID = _messageParameters.orderID;
-        bytes32 makerMsgHash = _getMessageHash(_messageParameters);
+        uint64 orderID = _orderParameters.orderID;
+        bytes32 makerMsgHash = _getMessageHash(_orderParameters);
         bool isMakerSignatureValid = _isValidSignatureHash(
             msg.sender,
             makerMsgHash,
@@ -463,7 +471,7 @@ contract Swapper is
 
         //signature validity
         bytes32 makerMsgHash = _getMessageHash(
-            MessageParameters(
+            OrderParameters(
                 maxFeeRatio,
                 _matchedOrder.makerOrderID,
                 _matchedOrder.makerValidUntil,
@@ -476,7 +484,7 @@ contract Swapper is
         );
 
         bytes32 takerMsgHash = _getMessageHash(
-            MessageParameters(
+            OrderParameters(
                 maxFeeRatio,
                 _matchedOrder.takerOrderID,
                 _matchedOrder.takerValidUntil,
@@ -629,22 +637,22 @@ contract Swapper is
      * @dev _getMessageHash function is used in th execute Swap to hash the given Swap data,
      *
      *
-     * @param _messageParameters(MessageParameters struct) contains the data that a user signed while placing on order.
+     * @param _orderParameters(OrderParameters struct) contains the data that a user signed while placing on order.
      *
      */
     function _getMessageHash(
-        MessageParameters memory _messageParameters
+        OrderParameters memory _orderParameters
     ) internal pure returns (bytes32) {
         bytes32 hash = keccak256(
             abi.encodePacked(
-                _messageParameters.maxFeeRatio,
-                _messageParameters.orderID,
-                _messageParameters.validUntil,
-                _messageParameters.chainID,
-                _messageParameters.ratioSellArg,
-                _messageParameters.ratioBuyArg,
-                _messageParameters.sellTokenAddress,
-                _messageParameters.buyTokenAddress
+                _orderParameters.maxFeeRatio,
+                _orderParameters.orderID,
+                _orderParameters.validUntil,
+                _orderParameters.chainID,
+                _orderParameters.ratioSellArg,
+                _orderParameters.ratioBuyArg,
+                _orderParameters.sellTokenAddress,
+                _orderParameters.buyTokenAddress
             )
         );
         return
@@ -694,6 +702,5 @@ contract Swapper is
             _newImplementation != address(0),
             "ERROR: upgrade to zero address"
         );
-     
     }
 }
