@@ -43,6 +43,10 @@ contract Swapper is
     // EIP-712 Domain Separator
     bytes32 public DOMAIN_SEPARATOR;
 
+    bytes32 constant EIP712DOMAIN_TYPEHASH = keccak256(
+        "EIP712Domain(string name,uint8s version,uint256 chainId,address verifyingContract)"
+    );
+
     bytes32 constant ORDER_TYPEHASH =
         keccak256(
             "OrderParameters(uint16 maxFeeRatio,uint64 orderID,uint64 validUntil, uint256 chainID,uint256 ratioSellArg,uint256 ratioBuyArg,address sellTokenAddress,address buyTokenAddress)"
@@ -108,6 +112,13 @@ contract Swapper is
         address buyTokenAddress;
     }
 
+    struct EIP712Domain {
+        string name;
+        uint8 version;
+        uint256 chainId;
+        address verifyingContract;
+    }
+
     // Events
 
     /// @dev Emitted when the Swap is called
@@ -148,6 +159,15 @@ contract Swapper is
         uint16 _maxFeeRatio,
         uint8 _version
     ) public initializer onlyProxy {
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                EIP712DOMAIN_TYPEHASH,
+                keccak256(bytes("Nobidex")),
+                _version,
+                block.chainid,
+                address(this)
+            )
+        );
         errorCodes = [402, 410, 408, 417, 401];
         maxFeeRatio = _maxFeeRatio;
         Moderator = _moderator;
