@@ -1,0 +1,3 @@
+[
+  "function getUserInfo(address,address[],address,uint64) view returns (tuple(tuple(address,uint256)[],tuple(address,uint256)[],uint256,uint256,bool))"
+]

@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import hre from "hardhat";
 import { Contract, ethers } from "ethers";
-import { deployContracts, deployGnosisContract } from "../Utils.test";
+import { deployContracts, deployGnosisContract } from "../../Utils.test";
 
 describe("swaper", function () {
   let gnosis: Contract, proxy: Contract, provider: ethers.providers.JsonRpcProvider;

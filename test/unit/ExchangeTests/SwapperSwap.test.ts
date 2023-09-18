@@ -1,14 +1,13 @@
 import { expect } from "chai";
 import { Contract, ethers } from "ethers";
 import hre from "hardhat";
-
 import {
   deployContracts,
   getAccounts,
   transferSomeTokens,
   createMsgHash,
   deployGnosisContract,
-} from "../Utils.test";
+} from "../../Utils.test";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 describe("swapper", function () {
