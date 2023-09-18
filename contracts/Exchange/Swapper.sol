@@ -9,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/SignatureCheckerU
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "../Utils/SwapperEIP712.sol";
 import "hardhat/console.sol";
 
 /// @title A trustless off-chain orderbook-based DEX
@@ -24,7 +25,8 @@ contract Swapper is
     Initializable,
     UUPSUpgradeable,
     PausableUpgradeable,
-    ReentrancyGuardUpgradeable
+    ReentrancyGuardUpgradeable,
+    SwapperEIP712
 {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -40,12 +42,6 @@ contract Swapper is
     uint16 public maxFeeRatio;
     uint8 public version;
 
-    // EIP-712 Domain Separator
-    bytes32 public DOMAIN_SEPARATOR;
-
-    bytes32 constant EIP712DOMAIN_TYPEHASH = keccak256(
-        "EIP712Domain(string name,uint8s version,uint256 chainId,address verifyingContract)"
-    );
 
     bytes32 constant ORDER_TYPEHASH =
         keccak256(
@@ -112,13 +108,6 @@ contract Swapper is
         address buyTokenAddress;
     }
 
-    struct EIP712Domain {
-        string name;
-        uint8 version;
-        uint256 chainId;
-        address verifyingContract;
-    }
-
     // Events
 
     /// @dev Emitted when the Swap is called
@@ -159,15 +148,7 @@ contract Swapper is
         uint16 _maxFeeRatio,
         uint8 _version
     ) public initializer onlyProxy {
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                EIP712DOMAIN_TYPEHASH,
-                keccak256(bytes("Nobidex")),
-                _version,
-                block.chainid,
-                address(this)
-            )
-        );
+         __swapperEIP712_init("Nobidex", _version);
         errorCodes = [402, 410, 408, 417, 401];
         maxFeeRatio = _maxFeeRatio;
         Moderator = _moderator;
@@ -662,9 +643,10 @@ contract Swapper is
      */
     function _getMessageHash(
         OrderParameters memory _orderParameters
-    ) internal pure returns (bytes32) {
+    ) internal view returns (bytes32) {
         bytes32 hash = keccak256(
             abi.encodePacked(
+                ORDER_TYPEHASH,
                 _orderParameters.maxFeeRatio,
                 _orderParameters.orderID,
                 _orderParameters.validUntil,
@@ -675,10 +657,7 @@ contract Swapper is
                 _orderParameters.buyTokenAddress
             )
         );
-        return
-            keccak256(
-                abi.encodePacked("\x19Ethereum Signed Message:\n32", hash)
-            );
+        return HashTypedMessage(hash);
     }
 
     /**
