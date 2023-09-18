@@ -6,7 +6,7 @@ import {
   createMsgHash,
   transferSomeTokens,
   deployGnosisContract,
-} from "../Utils.test";
+} from "../../Utils.test";
 import { Contract, ethers } from "ethers";
 
 describe("swapper", function () {

@@ -4,7 +4,7 @@ import {
   deployContracts,
   getAccounts,
   deployGnosisContract,
-} from "../Utils.test";
+} from "../../Utils.test";
 import hre from "hardhat";
 import { Contract, ethers } from "ethers";
 
