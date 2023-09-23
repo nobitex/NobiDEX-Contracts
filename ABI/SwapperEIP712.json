@@ -1,0 +1,3 @@
+[
+  "function DOMAIN_SEPARATOR() view returns (bytes32)"
+]
