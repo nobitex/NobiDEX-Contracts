@@ -13,16 +13,13 @@ describe("swapper", function () {
   let gnosis: Contract,
     token3: Contract,
     token4: Contract,
-    proxy: ethers.Contract,
-    provider: ethers.providers.JsonRpcProvider;
+    proxy: ethers.Contract;
 
   beforeEach(async function () {
     gnosis = (await deployGnosisContract()).gnosis;
     proxy = (await deployContracts(gnosis.address)).proxy;
     token3 = (await deployContracts(gnosis.address)).token3;
     token4 = (await deployContracts(gnosis.address)).token4;
-    provider = hre.ethers.provider;
-    await provider.ready;
   });
   describe("`revokeOrder` Functionality", async function () {
     it("should cancel an order with the given ID", async function () {
@@ -44,7 +41,7 @@ describe("swapper", function () {
           takerFeeRatio: 20,
           makerOrderID: 2356,
           takerOrderID: 3154,
-          chainID: 5,
+          chainID,
           makerValidUntil: 100,
           takerValidUntil: 100,
           matchID: 1,
@@ -61,8 +58,7 @@ describe("swapper", function () {
         },
       ];
 
-      MatchedOrders = await createMsgHash(MatchedOrders);
-     
+      MatchedOrders = await createMsgHash(MatchedOrders, proxy);
 
       // base transfers
       const _amounts = [
@@ -114,7 +110,6 @@ describe("swapper", function () {
       const events1 = transactionReceipt1.events;
 
       //predict the event data
-      // const makerOrderID = 2356
 
       //assert
       // compare the event data with the predicted values

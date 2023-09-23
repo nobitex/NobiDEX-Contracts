@@ -241,7 +241,7 @@ describe("Proxy - Upgradability", function () {
       ];
 
       //create msg hashesh and adding them to the input data
-      await createMsgHash(MatchedOrders);
+      await createMsgHash(MatchedOrders, proxy);
 
       // base transfers
       const _amounts = [
