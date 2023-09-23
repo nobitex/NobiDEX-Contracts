@@ -133,7 +133,7 @@ export async function transferSomeTokens(
   }
 }
 
-export async function createMsgHash(msg: any[], swapper: Contract) {
+export async function createOrderHash(msg: any[], swapper: Contract) {
   const { daoMember3, daoMember4 } = await getAccounts();
   const provider = hre.ethers.provider;
   await provider.ready;
@@ -194,6 +194,56 @@ export async function createMsgHash(msg: any[], swapper: Contract) {
 
     msg[i].makerSignature = makerSignature;
     msg[i].takerSignature = takerSignature;
+  }
+
+  return msg;
+}
+
+export async function createMsgHash(msg: any[], swapper: Contract) {
+  const {  daoMember1 } = await getAccounts();
+  const provider = hre.ethers.provider;
+  await provider.ready;
+  const network = await provider.getNetwork();
+  const chainID = network.chainId;
+
+  for (let i = 0; i < msg.length; i++) {
+    const types = {
+      OrderParameters: [
+        { name: "maxFeeRatio", type: "uint16" },
+        { name: "orderID", type: "uint64" },
+        { name: "validUntil", type: "uint64" },
+        { name: "chainID", type: "uint256" },
+        { name: "ratioSellArg", type: "uint256" },
+        { name: "ratioBuyArg", type: "uint256" },
+        { name: "sellTokenAddress", type: "address" },
+        { name: "buyTokenAddress", type: "address" },
+      ],
+    };
+
+    const domain = {
+      name: "Nobidex",
+      version: "3",
+      chainId: chainID,
+      verifyingContract: swapper.address,
+    };
+    const OrderData = {
+      maxFeeRatio: defaultFee,
+      orderID: msg[i].orderID,
+      validUntil: msg[i].validUntil,
+      chainID: chainID,
+      ratioSellArg: msg[i].ratioSellArg,
+      ratioBuyArg: msg[i].ratioBuyArg,
+      sellTokenAddress: msg[i].sellTokenAddress,
+      buyTokenAddress: msg[i].buyTokenAddress,
+    };
+
+    const signature = await daoMember1._signTypedData(
+      domain,
+      types,
+      OrderData
+    );
+
+    msg[i].UserSignature = signature;
   }
 
   return msg;
