@@ -42,10 +42,9 @@ contract Swapper is
     uint16 public maxFeeRatio;
     uint8 public version;
 
-
     bytes32 constant ORDER_TYPEHASH =
         keccak256(
-            "OrderParameters(uint16 maxFeeRatio,uint64 orderID,uint64 validUntil, uint256 chainID,uint256 ratioSellArg,uint256 ratioBuyArg,address sellTokenAddress,address buyTokenAddress)"
+            "OrderParameters(uint16 maxFeeRatio,uint64 orderID,uint64 validUntil,uint256 chainID,uint256 ratioSellArg,uint256 ratioBuyArg,address sellTokenAddress,address buyTokenAddress)"
         );
 
     // status codes
@@ -148,7 +147,8 @@ contract Swapper is
         uint16 _maxFeeRatio,
         uint8 _version
     ) public initializer onlyProxy {
-         __swapperEIP712_init("Nobidex", _version);
+        __swapperEIP712_init("Nobidex", "3");
+
         errorCodes = [402, 410, 408, 417, 401];
         maxFeeRatio = _maxFeeRatio;
         Moderator = _moderator;
@@ -624,6 +624,7 @@ contract Swapper is
         bytes32 _messageHash,
         bytes memory _userSignature
     ) internal view returns (bool) {
+
         return
             SignatureCheckerUpgradeable.isValidSignatureNow(
                 _userAddress,
@@ -645,7 +646,7 @@ contract Swapper is
         OrderParameters memory _orderParameters
     ) internal view returns (bytes32) {
         bytes32 hash = keccak256(
-            abi.encodePacked(
+            abi.encode(
                 ORDER_TYPEHASH,
                 _orderParameters.maxFeeRatio,
                 _orderParameters.orderID,
