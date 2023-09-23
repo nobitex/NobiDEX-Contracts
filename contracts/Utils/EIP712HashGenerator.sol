@@ -1,9 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.10;
 
-import "hardhat/console.sol";
-
-contract SwapperEIP712 {
+contract EIP712HashGenerator {
     bytes32 public DOMAIN_SEPARATOR;
 
     struct EIP712Domain {
@@ -19,7 +17,7 @@ contract SwapperEIP712 {
         );
 
     //onlyInitializing
-    function __swapperEIP712_init(
+    function __EIP712HashGenerator_init(
         string memory _name,
         string memory _version
     ) internal {
