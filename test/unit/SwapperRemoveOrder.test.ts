@@ -14,14 +14,12 @@ describe("swapper", function () {
     token3: Contract,
     token4: Contract,
     proxy: ethers.Contract;
-    
 
-    beforeEach(async function () {
+  beforeEach(async function () {
     gnosis = (await deployGnosisContract()).gnosis;
     proxy = (await deployContracts(gnosis.address)).proxy;
     token3 = (await deployContracts(gnosis.address)).token3;
     token4 = (await deployContracts(gnosis.address)).token4;
-
   });
   describe("`revokeOrder` Functionality", async function () {
     it("should cancel an order with the given ID", async function () {
@@ -33,8 +31,6 @@ describe("swapper", function () {
       await provider.ready;
       const network = await provider.getNetwork();
       const chainID = network.chainId;
-  
-
 
       let MatchedOrders;
 
@@ -62,9 +58,7 @@ describe("swapper", function () {
         },
       ];
 
-
       MatchedOrders = await createMsgHash(MatchedOrders, proxy);
-
 
       // base transfers
       const _amounts = [

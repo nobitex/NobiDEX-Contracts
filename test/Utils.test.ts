@@ -1,6 +1,4 @@
-import { JsonRpcSigner } from "@ethersproject/providers";
 import { BigNumber, Contract } from "ethers";
-import { _TypedDataEncoder } from "ethers/lib/utils";
 import hre, { ethers, upgrades } from "hardhat";
 const defaultFee = 20;
 
@@ -133,7 +131,6 @@ export async function createMsgHash(msg: any[], swapper: Contract) {
   const chainID = network.chainId;
 
   for (let i = 0; i < msg.length; i++) {
-
     const types = {
       OrderParameters: [
         { name: "maxFeeRatio", type: "uint16" },
@@ -187,16 +184,6 @@ export async function createMsgHash(msg: any[], swapper: Contract) {
 
     msg[i].makerSignature = makerSignature;
     msg[i].takerSignature = takerSignature;
- 
-
-    // const signer = ethers.utils.verifyTypedData(
-    //   domain,
-    //   types,
-    //   makerOrderData,
-    //   makerSignature
-    // );
-
-
   }
 
   return msg;
