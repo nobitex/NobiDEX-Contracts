@@ -133,7 +133,7 @@ export async function transferSomeTokens(
   }
 }
 
-export async function createMsgHash(msg: any[]) {
+export async function createMsgHash(msg: any[], swapper: Contract) {
   const { daoMember3, daoMember4 } = await getAccounts();
   const provider = hre.ethers.provider;
   await provider.ready;
@@ -141,56 +141,56 @@ export async function createMsgHash(msg: any[]) {
   const chainID = network.chainId;
 
   for (let i = 0; i < msg.length; i++) {
-    const makermessageHash = ethers.utils.solidityKeccak256(
-      [
-        "uint16",
-        "uint64",
-        "uint64",
-        "uint256",
-        "uint256",
-        "uint256",
-        "address",
-        "address",
+    const types = {
+      OrderParameters: [
+        { name: "maxFeeRatio", type: "uint16" },
+        { name: "orderID", type: "uint64" },
+        { name: "validUntil", type: "uint64" },
+        { name: "chainID", type: "uint256" },
+        { name: "ratioSellArg", type: "uint256" },
+        { name: "ratioBuyArg", type: "uint256" },
+        { name: "sellTokenAddress", type: "address" },
+        { name: "buyTokenAddress", type: "address" },
       ],
-      [
-        defaultFee,
-        msg[i].makerOrderID,
-        msg[i].makerValidUntil,
-        chainID,
-        msg[i].makerRatioSellArg,
-        msg[i].makerRatioBuyArg,
-        msg[i].makerSellTokenAddress,
-        msg[i].takerSellTokenAddress,
-      ]
-    );
-    const takermessageHash = ethers.utils.solidityKeccak256(
-      [
-        "uint16",
-        "uint64",
-        "uint64",
-        "uint256",
-        "uint256",
-        "uint256",
-        "address",
-        "address",
-      ],
-      [
-        defaultFee,
-        msg[i].takerOrderID,
-        msg[i].takerValidUntil,
-        chainID,
-        msg[i].takerRatioSellArg,
-        msg[i].takerRatioBuyArg,
-        msg[i].takerSellTokenAddress,
-        msg[i].makerSellTokenAddress,
-      ]
-    );
+    };
 
-    const makerMessageHashBinary = ethers.utils.arrayify(makermessageHash);
-    const takerMessageHashBinary = ethers.utils.arrayify(takermessageHash);
+    const domain = {
+      name: "Nobidex",
+      version: "3",
+      chainId: chainID,
+      verifyingContract: swapper.address,
+    };
+    const makerOrderData = {
+      maxFeeRatio: defaultFee,
+      orderID: msg[i].makerOrderID,
+      validUntil: msg[i].makerValidUntil,
+      chainID: chainID,
+      ratioSellArg: msg[i].makerRatioSellArg,
+      ratioBuyArg: msg[i].makerRatioBuyArg,
+      sellTokenAddress: msg[i].makerSellTokenAddress,
+      buyTokenAddress: msg[i].takerSellTokenAddress,
+    };
 
-    const makerSignature = await daoMember3.signMessage(makerMessageHashBinary);
-    const takerSignature = await daoMember4.signMessage(takerMessageHashBinary);
+    const takerOrderData = {
+      maxFeeRatio: defaultFee,
+      orderID: msg[i].takerOrderID,
+      validUntil: msg[i].takerValidUntil,
+      chainID: chainID,
+      ratioSellArg: msg[i].takerRatioSellArg,
+      ratioBuyArg: msg[i].takerRatioBuyArg,
+      sellTokenAddress: msg[i].takerSellTokenAddress,
+      buyTokenAddress: msg[i].makerSellTokenAddress,
+    };
+    const makerSignature = await daoMember3._signTypedData(
+      domain,
+      types,
+      makerOrderData
+    );
+    const takerSignature = await daoMember4._signTypedData(
+      domain,
+      types,
+      takerOrderData
+    );
 
     msg[i].makerSignature = makerSignature;
     msg[i].takerSignature = takerSignature;

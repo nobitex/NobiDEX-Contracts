@@ -7,6 +7,7 @@
   "event Unpaused(address)",
   "event Upgraded(address indexed)",
   "event orderCancelled(address,uint64)",
+  "function DOMAIN_SEPARATOR() view returns (bytes32)",
   "function FeeRatioDenominator() view returns (uint32)",
   "function Moderator() view returns (address)",
   "function Swap(tuple(uint16,uint16,uint64,uint64,uint64,uint64,uint256,uint256,uint256,uint256,uint256,uint256,uint256,address,address,address,address,bytes,bytes)[])",
