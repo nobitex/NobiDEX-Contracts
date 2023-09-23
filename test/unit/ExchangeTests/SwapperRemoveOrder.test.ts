@@ -3,7 +3,7 @@ import hre from "hardhat";
 import {
   deployContracts,
   getAccounts,
-  createMsgHash,
+  createOrderHash,
   transferSomeTokens,
   deployGnosisContract,
 } from "../../Utils.test";
@@ -58,7 +58,7 @@ describe("swapper", function () {
         },
       ];
 
-      MatchedOrders = await createMsgHash(MatchedOrders, proxy);
+      MatchedOrders = await createOrderHash(MatchedOrders, proxy);
 
       // base transfers
       const _amounts = [

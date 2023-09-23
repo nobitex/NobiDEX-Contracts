@@ -5,7 +5,7 @@ import {
   deployContracts,
   getAccounts,
   transferSomeTokens,
-  createMsgHash,
+  createOrderHash,
   deployGnosisContract,
 } from "../../Utils.test";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
@@ -201,7 +201,7 @@ describe("swapper", function () {
       ];
 
       //create msg hashesh and adding them to the input data
-      await createMsgHash(MatchedOrders, proxy);
+      await createOrderHash(MatchedOrders, proxy);
 
       // base transfers
       const _amounts = [

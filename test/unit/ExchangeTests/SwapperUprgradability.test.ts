@@ -4,7 +4,7 @@ import {
   deployContracts,
   getAccounts,
   transferSomeTokens,
-  createMsgHash,
+  createOrderHash,
   deployGnosisContract,
   deployProxyUpgrade,
 } from "../../Utils.test";
@@ -241,7 +241,7 @@ describe("Proxy - Upgradability", function () {
       ];
 
       //create msg hashesh and adding them to the input data
-      await createMsgHash(MatchedOrders, proxy);
+      await createOrderHash(MatchedOrders, proxy);
 
       // base transfers
       const _amounts = [
