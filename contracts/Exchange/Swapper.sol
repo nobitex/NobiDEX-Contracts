@@ -9,6 +9,7 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/SignatureCheckerU
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "../Utils/SwapperEIP712.sol";
 import "hardhat/console.sol";
 
@@ -29,6 +30,7 @@ contract Swapper is
     SwapperEIP712
 {
     using SafeERC20Upgradeable for IERC20Upgradeable;
+    using StringsUpgradeable for uint8;
 
     // State Variables
 
@@ -147,7 +149,7 @@ contract Swapper is
         uint16 _maxFeeRatio,
         uint8 _version
     ) public initializer onlyProxy {
-        __swapperEIP712_init("Nobidex", "3");
+        __swapperEIP712_init("Nobidex", _version.toString());
 
         errorCodes = [402, 410, 408, 417, 401];
         maxFeeRatio = _maxFeeRatio;
@@ -624,7 +626,6 @@ contract Swapper is
         bytes32 _messageHash,
         bytes memory _userSignature
     ) internal view returns (bool) {
-
         return
             SignatureCheckerUpgradeable.isValidSignatureNow(
                 _userAddress,
