@@ -2,7 +2,7 @@ import { expect } from "chai";
 import {
   deployContracts,
   deployGnosisContract,
-} from "../Utils.test";
+} from "../../Utils.test";
 import { Contract, ethers } from "ethers";
 const defaultFee = 20;
 describe("Swapper - updateSwapperFee", function () {

@@ -3,7 +3,7 @@ import {
   deployContracts,
   getAccounts,
   deployGnosisContract,
-} from "../Utils.test";
+} from "../../Utils.test";
 import { Contract, ethers } from "ethers";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import hre from "hardhat";

@@ -7,9 +7,11 @@ export async function deployContracts(moderator: string) {
 
   const { proxy } = await deploySwapper(moderator);
 
+  const { userInfo } = await deployUserInfo();
+
   // deploying 4 mock erc20 tokens
   const { token1, token2, token3, token4 } = await deployERC20();
-  return { proxy, token1, token2, token3, token4 };
+  return { proxy, userInfo, token1, token2, token3, token4 };
 }
 export async function deployGnosisContract() {
   // deploys swapper
@@ -98,6 +100,14 @@ export async function deployProxyUpgrade() {
   return { swapperUpgrade };
 }
 
+export async function deployUserInfo() {
+  const UserInfo = await ethers.getContractFactory("UserInfo");
+  const userInfo = await UserInfo.deploy();
+  await userInfo.deployed();
+
+  return { userInfo };
+}
+
 export async function transferSomeTokensTo(
   tokens: Contract[],
   amounts: BigNumber[],
@@ -123,7 +133,7 @@ export async function transferSomeTokens(
   }
 }
 
-export async function createMsgHash(msg: any[], swapper: Contract) {
+export async function createOrderHash(msg: any[], swapper: Contract) {
   const { daoMember3, daoMember4 } = await getAccounts();
   const provider = hre.ethers.provider;
   await provider.ready;
@@ -184,6 +194,56 @@ export async function createMsgHash(msg: any[], swapper: Contract) {
 
     msg[i].makerSignature = makerSignature;
     msg[i].takerSignature = takerSignature;
+  }
+
+  return msg;
+}
+
+export async function createMsgHash(msg: any[], swapper: Contract) {
+  const {  daoMember1 } = await getAccounts();
+  const provider = hre.ethers.provider;
+  await provider.ready;
+  const network = await provider.getNetwork();
+  const chainID = network.chainId;
+
+  for (let i = 0; i < msg.length; i++) {
+    const types = {
+      OrderParameters: [
+        { name: "maxFeeRatio", type: "uint16" },
+        { name: "orderID", type: "uint64" },
+        { name: "validUntil", type: "uint64" },
+        { name: "chainID", type: "uint256" },
+        { name: "ratioSellArg", type: "uint256" },
+        { name: "ratioBuyArg", type: "uint256" },
+        { name: "sellTokenAddress", type: "address" },
+        { name: "buyTokenAddress", type: "address" },
+      ],
+    };
+
+    const domain = {
+      name: "Nobidex",
+      version: "3",
+      chainId: chainID,
+      verifyingContract: swapper.address,
+    };
+    const OrderData = {
+      maxFeeRatio: defaultFee,
+      orderID: msg[i].orderID,
+      validUntil: msg[i].validUntil,
+      chainID: chainID,
+      ratioSellArg: msg[i].ratioSellArg,
+      ratioBuyArg: msg[i].ratioBuyArg,
+      sellTokenAddress: msg[i].sellTokenAddress,
+      buyTokenAddress: msg[i].buyTokenAddress,
+    };
+
+    const signature = await daoMember1._signTypedData(
+      domain,
+      types,
+      OrderData
+    );
+
+    msg[i].UserSignature = signature;
   }
 
   return msg;

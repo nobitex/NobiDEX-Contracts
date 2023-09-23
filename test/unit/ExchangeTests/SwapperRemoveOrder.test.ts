@@ -3,10 +3,10 @@ import hre from "hardhat";
 import {
   deployContracts,
   getAccounts,
-  createMsgHash,
+  createOrderHash,
   transferSomeTokens,
   deployGnosisContract,
-} from "../Utils.test";
+} from "../../Utils.test";
 import { Contract, ethers } from "ethers";
 
 describe("swapper", function () {
@@ -58,7 +58,7 @@ describe("swapper", function () {
         },
       ];
 
-      MatchedOrders = await createMsgHash(MatchedOrders, proxy);
+      MatchedOrders = await createOrderHash(MatchedOrders, proxy);
 
       // base transfers
       const _amounts = [
