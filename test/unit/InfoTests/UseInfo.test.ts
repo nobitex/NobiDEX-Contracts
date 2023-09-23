@@ -6,6 +6,7 @@ import {
   deployGnosisContract,
   getAccounts,
   transferSomeTokensTo,
+  createMsgHash
 } from "../../Utils.test";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -86,35 +87,14 @@ describe("user info", function () {
         ratioBuyArg: 3n * 10n ** 18n,
         sellTokenAddress: token1.address,
         buyTokenAddress: token2.address,
+        UserSignature: "",
       },
     ];
 
-    const messageParametersHash = ethers.utils.solidityKeccak256(
-      [
-        "uint16",
-        "uint64",
-        "uint64",
-        "uint256",
-        "uint256",
-        "uint256",
-        "address",
-        "address",
-      ],
-      [
-        messageParameters[0].maxFeeRatio,
-        messageParameters[0].orderID,
-        messageParameters[0].validUntil,
-        messageParameters[0].chainID,
-        messageParameters[0].ratioSellArg,
-        messageParameters[0].ratioBuyArg,
-        messageParameters[0].sellTokenAddress,
-        messageParameters[0].buyTokenAddress,
-      ]
-    );
 
-    const messageParametersSignature = await daoMember1.signMessage(
-      ethers.utils.arrayify(messageParametersHash)
-    );
+    await createMsgHash(messageParameters, proxy)
+    
+    const messageParametersSignature = messageParameters[0].UserSignature
 
     await proxy
       .connect(daoMember1)
