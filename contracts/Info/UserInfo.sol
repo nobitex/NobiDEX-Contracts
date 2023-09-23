@@ -15,12 +15,50 @@ contract UserInfo {
         uint256 tokenAllowance;
     }
 
-    struct UserInfoDate {
+    struct UserInfoData {
         TokenBalance[] tokenBalances;
         TokenAllowance[] tokenAllowances;
         uint256 blockNumber;
         uint256 codeSize;
         bool isRevoked;
+    }
+
+    function getUserInfo(
+        address userAddress,
+        address[] memory tokenAddresses,
+        address swapperAddress
+    ) external view returns (UserInfoData memory) {
+        UserInfoData memory data;
+        data.tokenBalances = getTokenBalances(userAddress, tokenAddresses);
+        data.tokenAllowances = getAllowances(
+            tokenAddresses,
+            userAddress,
+            swapperAddress
+        );
+        return data;
+    }
+
+    function getUserInfo(
+        address userAddress,
+        address[] memory tokenAddresses,
+        address swapperAddress,
+        uint64 orderID
+    ) external view returns (UserInfoData memory) {
+        UserInfoData memory data;
+        data.tokenBalances = getTokenBalances(userAddress, tokenAddresses);
+        data.tokenAllowances = getAllowances(
+            tokenAddresses,
+            userAddress,
+            swapperAddress
+        );
+        data.blockNumber = getBlockNumber();
+        data.codeSize = getCodeSize(userAddress);
+        data.isRevoked = getOrderRevokedStatus(
+            userAddress,
+            orderID,
+            swapperAddress
+        );
+        return data;
     }
 
     function getTokenBalances(
@@ -30,11 +68,15 @@ contract UserInfo {
         TokenBalance[] memory balances = new TokenBalance[](
             tokenAddresses.length
         );
-        for (uint256 i = 0; i < tokenAddresses.length; i++) {
+        for (uint256 i = 0; i < tokenAddresses.length; ) {
             balances[i].tokenAddress = tokenAddresses[i];
             balances[i].tokenBalance = IERC20(tokenAddresses[i]).balanceOf(
                 userAddress
             );
+
+            unchecked {
+                i++;
+            }
         }
         return balances;
     }
@@ -47,12 +89,16 @@ contract UserInfo {
         TokenAllowance[] memory allowances = new TokenAllowance[](
             tokenAddresses.length
         );
-        for (uint256 i = 0; i < tokenAddresses.length; i++) {
+        for (uint256 i = 0; i < tokenAddresses.length; ) {
             allowances[i].tokenAddress = tokenAddresses[i];
             allowances[i].tokenAllowance = IERC20(tokenAddresses[i]).allowance(
                 userAddress,
                 swapperAddress
             );
+
+            unchecked {
+                i++;
+            }
         }
 
         return allowances;
@@ -78,28 +124,5 @@ contract UserInfo {
         Swapper swapper = Swapper(swapperAddress);
         bool orderStatus = swapper.orderRevokedStatus(userAddress, orderID);
         return orderStatus;
-    }
-
-    function getUserInfo(
-        address userAddress,
-        address[] memory tokenAddresses,
-        address swapperAddress,
-        uint64 orderID
-    ) external view returns (UserInfoDate memory) {
-        UserInfoDate memory data;
-        data.tokenBalances = getTokenBalances(userAddress, tokenAddresses);
-        data.tokenAllowances = getAllowances(
-            tokenAddresses,
-            userAddress,
-            swapperAddress
-        );
-        data.blockNumber = getBlockNumber();
-        data.codeSize = getCodeSize(userAddress);
-        data.isRevoked = getOrderRevokedStatus(
-            userAddress,
-            orderID,
-            swapperAddress
-        );
-        return data;
     }
 }
