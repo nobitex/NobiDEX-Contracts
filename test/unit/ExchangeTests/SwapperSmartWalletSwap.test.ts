@@ -264,7 +264,7 @@ describe("swapper", function () {
       );
       await smartWallet
         .connect(daoMember1)
-        .ERC20approve(token3.address, proxy.address, 1000n * 10n ** 18n);
+        .ERC20Approve(token3.address, proxy.address, 1000n * 10n ** 18n);
 
       // base allowances
       await token1
@@ -436,7 +436,7 @@ describe("swapper", function () {
       );
       await smartWallet
         .connect(daoMember1)
-        .ERC20approve(token3.address, proxy.address, 1000n * 10n ** 18n);
+        .ERC20Approve(token3.address, proxy.address, 1000n * 10n ** 18n);
 
       // base allowances
       await token1
