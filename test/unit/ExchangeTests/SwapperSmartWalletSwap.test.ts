@@ -53,7 +53,7 @@ describe("swapper", function () {
     const network = await provider.getNetwork();
     chainID = network.chainId;
   });
-  describe("`Swap` Functionality", async function () {
+  describe("`Swap` Functionality using smart wallet", async function () {
     it("should emit TranactionCreated events", async function () {
       //executeSwap functions input(orders)
 
@@ -288,12 +288,12 @@ describe("swapper", function () {
         Number(MatchedOrders[0].takerTotalSellAmount) - makerFee;
 
       //pre transaction balances
-      const app3T3preTxBalance = await token3.balanceOf(smartWallet.address);
-      const app4T4preTxBalance = await token1.balanceOf(daoMember1.address);
-      const app3T4preTxBalance = await token1.balanceOf(smartWallet.address);
-      const app4T3preTxBalance = await token3.balanceOf(daoMember1.address);
+      const SWT3PreTXBalance = await token3.balanceOf(smartWallet.address);
+      const EOAT1PreTXBalance = await token1.balanceOf(daoMember1.address);
+      const SWT1PreTXBalance = await token1.balanceOf(smartWallet.address);
+      const EOAT3PreTXBalance = await token3.balanceOf(daoMember1.address);
       const adminT3preTxBalance = await token3.balanceOf(gnosis.address);
-      const adminT4preTxBalance = await token1.balanceOf(gnosis.address);
+      const adminT1preTxBalance = await token1.balanceOf(gnosis.address);
 
       //add the caller into broker addresses mappings
       await proxy.connect(daoMember1).registerBrokers([deployer.address]);
@@ -302,35 +302,35 @@ describe("swapper", function () {
       await proxy.connect(deployer).Swap(MatchedOrders);
 
       // post transaction balances
-      const app3T3postTxBalance = await token3.balanceOf(smartWallet.address);
-      const app4T4postTxBalance = await token1.balanceOf(daoMember1.address);
-      const app3T4postTxBalance = await token1.balanceOf(smartWallet.address);
-      const app4T3postTxBalance = await token3.balanceOf(daoMember1.address);
+      const SWT3T3postTxBalance = await token3.balanceOf(smartWallet.address);
+      const EOAT1T1postTxBalance = await token1.balanceOf(daoMember1.address);
+      const SWT1T1postTxBalance = await token1.balanceOf(smartWallet.address);
+      const EOAT3T3postTxBalance = await token3.balanceOf(daoMember1.address);
       const adminT3postTxBalance = await token3.balanceOf(gnosis.address);
-      const adminT4postTxBalance = await token1.balanceOf(gnosis.address);
+      const adminT1postTxBalance = await token1.balanceOf(gnosis.address);
 
       // asserts for balance checks
 
-      expect(Number(app3T3postTxBalance)).to.be.equal(
-        Number(app3T3preTxBalance) -
+      expect(Number(SWT3T3postTxBalance)).to.be.equal(
+        Number(SWT3PreTXBalance) -
           Number(MatchedOrders[0].makerTotalSellAmount)
       );
-      expect(Number(app4T4postTxBalance)).to.be.equal(
-        Number(app4T4preTxBalance) -
+      expect(Number(EOAT1T1postTxBalance)).to.be.equal(
+        Number(EOAT1PreTXBalance) -
           Number(MatchedOrders[0].takerTotalSellAmount)
       );
 
-      expect(Number(app3T4postTxBalance)).to.be.equal(
-        Number(app3T4preTxBalance) + takerSellAmount
+      expect(Number(SWT1T1postTxBalance)).to.be.equal(
+        Number(SWT1PreTXBalance) + takerSellAmount
       );
-      expect(Number(app4T3postTxBalance)).to.be.equal(
-        Number(app4T3preTxBalance) + makerSellAmount
+      expect(Number(EOAT3T3postTxBalance)).to.be.equal(
+        Number(EOAT3PreTXBalance) + makerSellAmount
       );
       expect(Number(adminT3postTxBalance)).to.be.equal(
         Number(adminT3preTxBalance) + takerFee
       );
-      expect(Number(adminT4postTxBalance)).to.be.equal(
-        Number(adminT4preTxBalance) + makerFee
+      expect(Number(adminT1postTxBalance)).to.be.equal(
+        Number(adminT1preTxBalance) + makerFee
       );
 
       // predicting the result of the swapExecuted event
