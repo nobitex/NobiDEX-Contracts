@@ -185,7 +185,7 @@ describe("swapper", function () {
           takerUserAddress: daoMember1.address,
         },
         {
-          //successful order
+          //Precondition Failed
           makerFeeRatio: 10,
           takerFeeRatio: 20,
           makerOrderID: 2356,
@@ -207,7 +207,10 @@ describe("swapper", function () {
       ];
 
       for (let i = 0; i < MatchedOrders.length; i++) {
+        // add the signature for maker(smart wallet)
         MatchedOrders[i].makerSignature = "0x";
+
+        // smart wallet order
         const makerMessageParameters = {
           maxFeeRatio: MatchedOrders[i].makerFeeRatio,
           orderID: MatchedOrders[i].makerOrderID,
@@ -222,9 +225,12 @@ describe("swapper", function () {
           makerMessageParameters,
           proxy
         );
+
+        // owners of the smart wallet approve the order
         await smartWallet.connect(daoMember1).approveHash(makerDataHash);
         await smartWallet.connect(daoMember2).approveHash(makerDataHash);
 
+        //taker order data
         const takerMessageParameters = {
           maxFeeRatio: MatchedOrders[i].takerFeeRatio,
           orderID: MatchedOrders[i].takerOrderID,
@@ -239,20 +245,15 @@ describe("swapper", function () {
         await createMsgHash(takerMessageParameters, proxy);
 
         const takerSignature = takerMessageParameters.UserSignature;
-
+        // add the signature for taker(EOA)
         MatchedOrders[i].takerSignature = takerSignature;
       }
 
       // base transfers
-      const _amounts = [
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-      ];
-      const _tokens = [token1, token2, token3, token4];
+      const _amounts = [ethers.BigNumber.from(1000n * 10n ** 18n)];
+      const _tokens = [token1];
 
-      const _callers = [daoMember1, daoMember2, daoMember3, daoMember4];
+      const _callers = [daoMember1];
 
       await transferSomeTokens(_tokens, _amounts, _callers);
 
@@ -268,15 +269,6 @@ describe("swapper", function () {
       // base allowances
       await token1
         .connect(daoMember1)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token2
-        .connect(daoMember2)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token3
-        .connect(daoMember3)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token4
-        .connect(daoMember4)
         .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
 
       //fee and sell amounts calculations
@@ -430,15 +422,10 @@ describe("swapper", function () {
       MatchedOrders[0].takerSignature = takerOrderData.UserSignature;
 
       // base transfers
-      const _amounts = [
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-      ];
-      const _tokens = [token1, token2, token3, token4];
+      const _amounts = [ethers.BigNumber.from(1000n * 10n ** 18n)];
+      const _tokens = [token1];
 
-      const _callers = [daoMember1, daoMember2, daoMember3, daoMember4];
+      const _callers = [daoMember1];
 
       await transferSomeTokens(_tokens, _amounts, _callers);
 
@@ -454,15 +441,6 @@ describe("swapper", function () {
       // base allowances
       await token1
         .connect(daoMember1)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token2
-        .connect(daoMember2)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token3
-        .connect(daoMember3)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token4
-        .connect(daoMember4)
         .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
 
       // adding caller to the brokerAddressees mapping
@@ -540,15 +518,10 @@ describe("swapper", function () {
       MatchedOrders[0].takerSignature = takerOrderData.UserSignature;
 
       //base transfers
-      const _amounts = [
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-        ethers.BigNumber.from(1000n * 10n ** 18n),
-      ];
-      const _tokens = [token1, token2, token3, token4];
+      const _amounts = [ethers.BigNumber.from(1000n * 10n ** 18n)];
+      const _tokens = [token1];
 
-      const _callers = [daoMember1, daoMember2, daoMember3, daoMember4];
+      const _callers = [daoMember1];
 
       await transferSomeTokens(_tokens, _amounts, _callers);
 
@@ -556,15 +529,7 @@ describe("swapper", function () {
       await token1
         .connect(daoMember1)
         .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token2
-        .connect(daoMember2)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token3
-        .connect(daoMember3)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
-      await token4
-        .connect(daoMember4)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
+
       //asserts
       await expect(
         proxy.connect(daoMember6).Swap(MatchedOrders)
