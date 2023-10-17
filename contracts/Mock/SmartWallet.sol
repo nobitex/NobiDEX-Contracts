@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.10;
 
+import "hardhat/console.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 contract SmartWallet {
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
     uint8 signMessageThreshold;
@@ -30,6 +33,15 @@ contract SmartWallet {
             "ERROR: Already approved."
         );
         hashApprovalCount[_messageHash]++;
+    }
+
+    function approve(
+        address _token,
+        address _spender,
+        uint256 _amount
+    ) public onlyOwner returns (bool) {
+        IERC20(_token).approve(_spender, _amount);
+        return true;
     }
 
     function isValidSignature(
