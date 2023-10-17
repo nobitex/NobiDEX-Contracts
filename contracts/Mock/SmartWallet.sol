@@ -35,7 +35,7 @@ contract SmartWallet {
         hashApprovalCount[_messageHash]++;
     }
 
-    function approve(
+    function ERC20approve(
         address _token,
         address _spender,
         uint256 _amount
