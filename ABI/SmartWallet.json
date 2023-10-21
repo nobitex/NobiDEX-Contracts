@@ -1,6 +1,6 @@
 [
   "constructor(address[],uint8)",
-  "function ERC20approve(address,address,uint256) returns (bool)",
+  "function ERC20Approve(address,address,uint256) returns (bool)",
   "function approveHash(bytes32)",
   "function approvedHashByOwner(bytes32,address) view returns (bool)",
   "function hashApprovalCount(bytes32) view returns (uint8)",
