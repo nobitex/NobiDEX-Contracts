@@ -17,12 +17,9 @@ describe("swapper", function () {
     token1: Contract,
     token2: Contract,
     token3: Contract,
-    token4: Contract,
     deployer: SignerWithAddress,
     daoMember1: SignerWithAddress,
     daoMember2: SignerWithAddress,
-    daoMember3: SignerWithAddress,
-    daoMember4: SignerWithAddress,
     daoMember5: SignerWithAddress,
     daoMember6: SignerWithAddress,
     proxy: ethers.Contract,
@@ -38,12 +35,9 @@ describe("swapper", function () {
     token1 = (await deployContracts(gnosis.address)).token1;
     token2 = (await deployContracts(gnosis.address)).token2;
     token3 = (await deployContracts(gnosis.address)).token3;
-    token4 = (await deployContracts(gnosis.address)).token4;
     deployer = (await getAccounts()).deployer;
     daoMember1 = (await getAccounts()).daoMember1;
     daoMember2 = (await getAccounts()).daoMember2;
-    daoMember3 = (await getAccounts()).daoMember3;
-    daoMember4 = (await getAccounts()).daoMember4;
     daoMember5 = (await getAccounts()).daoMember5;
     daoMember6 = (await getAccounts()).daoMember6;
     provider = hre.ethers.provider;
