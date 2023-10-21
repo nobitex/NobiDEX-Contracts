@@ -40,7 +40,7 @@ contract SmartWallet {
         address _spender,
         uint256 _amount
     ) public onlyOwner returns (bool) {
-        require(IERC20(_token).approve(_spender, _amount), "Approval failed");
+        require(IERC20(_token).approve(_spender, _amount), "ERROR: Approval failed");
         return true;
     }
 
