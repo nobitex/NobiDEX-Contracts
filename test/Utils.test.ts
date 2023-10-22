@@ -1,4 +1,4 @@
-import { BigNumber, Contract } from "ethers";
+import { BigNumber, Contract, utils } from "ethers";
 import hre, { ethers, upgrades } from "hardhat";
 const defaultFee = 20;
 
@@ -108,6 +108,17 @@ export async function deployUserInfo() {
   return { userInfo };
 }
 
+export async function deploySmartWallet() {
+  const { daoMember1, daoMember2 } = await getAccounts();
+  const SmartWallet = await ethers.getContractFactory("SmartWallet");
+  const smartWallet = await SmartWallet.deploy(
+    [daoMember1.address, daoMember2.address],
+    2
+  );
+  await smartWallet.deployed();
+  return { smartWallet };
+}
+
 export async function transferSomeTokensTo(
   tokens: Contract[],
   amounts: BigNumber[],
@@ -199,54 +210,89 @@ export async function createOrderHash(msg: any[], swapper: Contract) {
   return msg;
 }
 
-export async function createMsgHash(msg: any[], swapper: Contract) {
-  const {  daoMember1 } = await getAccounts();
+export async function createMsgHash(msg: any, swapper: Contract) {
+  const { daoMember1 } = await getAccounts();
   const provider = hre.ethers.provider;
   await provider.ready;
   const network = await provider.getNetwork();
   const chainID = network.chainId;
 
-  for (let i = 0; i < msg.length; i++) {
-    const types = {
-      OrderParameters: [
-        { name: "maxFeeRatio", type: "uint16" },
-        { name: "orderID", type: "uint64" },
-        { name: "validUntil", type: "uint64" },
-        { name: "chainID", type: "uint256" },
-        { name: "ratioSellArg", type: "uint256" },
-        { name: "ratioBuyArg", type: "uint256" },
-        { name: "sellTokenAddress", type: "address" },
-        { name: "buyTokenAddress", type: "address" },
-      ],
-    };
+  const types = {
+    OrderParameters: [
+      { name: "maxFeeRatio", type: "uint16" },
+      { name: "orderID", type: "uint64" },
+      { name: "validUntil", type: "uint64" },
+      { name: "chainID", type: "uint256" },
+      { name: "ratioSellArg", type: "uint256" },
+      { name: "ratioBuyArg", type: "uint256" },
+      { name: "sellTokenAddress", type: "address" },
+      { name: "buyTokenAddress", type: "address" },
+    ],
+  };
 
-    const domain = {
-      name: "Nobidex",
-      version: "3",
-      chainId: chainID,
-      verifyingContract: swapper.address,
-    };
-    const OrderData = {
-      maxFeeRatio: defaultFee,
-      orderID: msg[i].orderID,
-      validUntil: msg[i].validUntil,
-      chainID: chainID,
-      ratioSellArg: msg[i].ratioSellArg,
-      ratioBuyArg: msg[i].ratioBuyArg,
-      sellTokenAddress: msg[i].sellTokenAddress,
-      buyTokenAddress: msg[i].buyTokenAddress,
-    };
+  const domain = {
+    name: "Nobidex",
+    version: "3",
+    chainId: chainID,
+    verifyingContract: swapper.address,
+  };
+  const OrderData = {
+    maxFeeRatio: defaultFee,
+    orderID: msg.orderID,
+    validUntil: msg.validUntil,
+    chainID: chainID,
+    ratioSellArg: msg.ratioSellArg,
+    ratioBuyArg: msg.ratioBuyArg,
+    sellTokenAddress: msg.sellTokenAddress,
+    buyTokenAddress: msg.buyTokenAddress,
+  };
 
-    const signature = await daoMember1._signTypedData(
-      domain,
-      types,
-      OrderData
-    );
+  const signature = await daoMember1._signTypedData(domain, types, OrderData);
 
-    msg[i].UserSignature = signature;
-  }
+  msg.UserSignature = signature;
 
   return msg;
+}
+
+export async function createTypedDataHash(msg: any, swapper: Contract) {
+  const provider = hre.ethers.provider;
+  await provider.ready;
+  const network = await provider.getNetwork();
+  const chainID = network.chainId;
+
+  const types = {
+    OrderParameters: [
+      { name: "maxFeeRatio", type: "uint16" },
+      { name: "orderID", type: "uint64" },
+      { name: "validUntil", type: "uint64" },
+      { name: "chainID", type: "uint256" },
+      { name: "ratioSellArg", type: "uint256" },
+      { name: "ratioBuyArg", type: "uint256" },
+      { name: "sellTokenAddress", type: "address" },
+      { name: "buyTokenAddress", type: "address" },
+    ],
+  };
+
+  const domain = {
+    name: "Nobidex",
+    version: "3",
+    chainId: chainID,
+    verifyingContract: swapper.address,
+  };
+  const OrderData = {
+    maxFeeRatio: defaultFee,
+    orderID: msg.orderID,
+    validUntil: msg.validUntil,
+    chainID: chainID,
+    ratioSellArg: msg.ratioSellArg,
+    ratioBuyArg: msg.ratioBuyArg,
+    sellTokenAddress: msg.sellTokenAddress,
+    buyTokenAddress: msg.buyTokenAddress,
+  };
+
+  const DataHash = utils._TypedDataEncoder.hash(domain, types, OrderData);
+
+  return DataHash;
 }
 
 async function deployERC20() {

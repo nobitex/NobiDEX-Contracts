@@ -6,7 +6,7 @@ import {
   deployGnosisContract,
   getAccounts,
   transferSomeTokensTo,
-  createMsgHash
+  createMsgHash,
 } from "../../Utils.test";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
@@ -77,28 +77,25 @@ describe("user info", function () {
   });
 
   it("Should revoke an order and get the user info", async function () {
-    const messageParameters = [
-      {
-        maxFeeRatio: 20,
-        orderID: 1,
-        validUntil: (await proxy.provider.getBlockNumber()) + 1,
-        chainID: (await proxy.provider.getNetwork()).chainId,
-        ratioSellArg: 3n * 10n ** 18n,
-        ratioBuyArg: 3n * 10n ** 18n,
-        sellTokenAddress: token1.address,
-        buyTokenAddress: token2.address,
-        UserSignature: "",
-      },
-    ];
+    const messageParameters = {
+      maxFeeRatio: 20,
+      orderID: 1,
+      validUntil: (await proxy.provider.getBlockNumber()) + 1,
+      chainID: (await proxy.provider.getNetwork()).chainId,
+      ratioSellArg: 3n * 10n ** 18n,
+      ratioBuyArg: 3n * 10n ** 18n,
+      sellTokenAddress: token1.address,
+      buyTokenAddress: token2.address,
+      UserSignature: "",
+    };
 
+    await createMsgHash(messageParameters, proxy);
 
-    await createMsgHash(messageParameters, proxy)
-    
-    const messageParametersSignature = messageParameters[0].UserSignature
+    const messageParametersSignature = messageParameters.UserSignature;
 
     await proxy
       .connect(daoMember1)
-      .revokeOrder(messageParameters[0], messageParametersSignature);
+      .revokeOrder(messageParameters, messageParametersSignature);
 
     const userInfo = await userInfoContract[
       "getUserInfo(address,address[],address,uint64)"
