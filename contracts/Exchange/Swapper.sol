@@ -335,26 +335,17 @@ contract Swapper is
      * them off-chain through the dex itself,
      *
      * @dev orderCancelled event is emitted with the msg.sender(users address) and the users orderID the wish to cancel,
-     * @param _orderParameters is the ID of the order the user wish to cancel.
+     * @param _orderID is the ID of the order the user wish to cancel.
      *
      */
 
     function revokeOrder(
-        OrderParameters memory _orderParameters,
-        bytes memory _signature
+            uint64 _orderID
     ) external whenNotPaused {
-        uint64 orderID = _orderParameters.orderID;
-        bytes32 makerMsgHash = _getMessageHash(_orderParameters);
-        bool isMakerSignatureValid = _isValidSignatureHash(
-            msg.sender,
-            makerMsgHash,
-            _signature
-        );
-        require(isMakerSignatureValid, "ERROR: invalid signature");
-        bool orderStatus = orderRevokedStatus[msg.sender][orderID];
+        bool orderStatus = orderRevokedStatus[msg.sender][_orderID];
         require(!orderStatus, "ERROR: already cancelled");
-        orderRevokedStatus[msg.sender][orderID] = true;
-        emit orderCancelled(msg.sender, orderID);
+        orderRevokedStatus[msg.sender][_orderID] = true;
+        emit orderCancelled(msg.sender, _orderID);
     }
 
     // pause and unpause functions
