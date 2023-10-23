@@ -177,7 +177,7 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
 
     function Swap(
         MatchedOrders[] calldata matchedOrders
-    ) external virtual whenNotPaused isBroker nonReentrant  {
+    ) external virtual whenNotPaused isBroker nonReentrant {
         SwapStatus[] memory batchExecuteStatus = new SwapStatus[](
             matchedOrders.length
         );
