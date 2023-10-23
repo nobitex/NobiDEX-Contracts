@@ -88,12 +88,6 @@ export async function deployGnosisMock() {
   return gnosis;
 }
 
-export async function deployProxyUpgrade() {
-  const SwapperUpgrade = await ethers.getContractFactory("SwapperUpgrade");
-  const swapperUpgrade = await SwapperUpgrade.deploy();
-  await swapperUpgrade.deployed();
-  return { swapperUpgrade };
-}
 
 export async function deployUserInfo() {
   const UserInfo = await ethers.getContractFactory("UserInfo");

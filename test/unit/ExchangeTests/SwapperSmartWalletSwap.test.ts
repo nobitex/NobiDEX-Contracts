@@ -22,7 +22,7 @@ describe("swapper", function () {
     daoMember2: SignerWithAddress,
     daoMember5: SignerWithAddress,
     daoMember6: SignerWithAddress,
-    proxy: ethers.Contract,
+    swapper: ethers.Contract,
     smartWallet: ethers.Contract,
     provider: ethers.providers.JsonRpcProvider,
     maxFeeRatio: number,
@@ -30,7 +30,7 @@ describe("swapper", function () {
 
   beforeEach(async function () {
     gnosis = (await deployGnosisContract()).gnosis;
-    proxy = (await deployContracts(gnosis.address)).proxy;
+    swapper = (await deployContracts(gnosis.address)).swapper;
     smartWallet = (await deploySmartWallet()).smartWallet;
     token1 = (await deployContracts(gnosis.address)).token1;
     token2 = (await deployContracts(gnosis.address)).token2;
@@ -43,7 +43,7 @@ describe("swapper", function () {
     provider = hre.ethers.provider;
     await provider.ready;
     // contract variables
-    maxFeeRatio = await proxy.maxFeeRatio();
+    maxFeeRatio = await swapper.maxFeeRatio();
     const network = await provider.getNetwork();
     chainID = network.chainId;
   });
@@ -217,7 +217,7 @@ describe("swapper", function () {
 
         const makerDataHash = createTypedDataHash(
           makerMessageParameters,
-          proxy
+          swapper
         );
 
         // owners of the smart wallet approve the order
@@ -236,7 +236,7 @@ describe("swapper", function () {
           UserSignature: "",
         };
 
-        await createMsgHash(takerMessageParameters, proxy);
+        await createMsgHash(takerMessageParameters, swapper);
 
         const takerSignature = takerMessageParameters.UserSignature;
         // add the signature for taker(EOA)
@@ -258,12 +258,12 @@ describe("swapper", function () {
       );
       await smartWallet
         .connect(daoMember1)
-        .ERC20Approve(token3.address, proxy.address, 1000n * 10n ** 18n);
+        .ERC20Approve(token3.address, swapper.address, 1000n * 10n ** 18n);
 
       // base allowances
       await token1
         .connect(daoMember1)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
+        .increaseAllowance(swapper.address, 1000n * 10n ** 18n);
 
       //fee and sell amounts calculations
       const takerFee =
@@ -290,10 +290,10 @@ describe("swapper", function () {
       const adminT1preTxBalance = await token1.balanceOf(gnosis.address);
 
       //add the caller into broker addresses mappings
-      await proxy.connect(daoMember1).registerBrokers([deployer.address]);
+      await swapper.connect(daoMember1).registerBrokers([deployer.address]);
 
       //broadcast the batchOrders to the contract
-      await proxy.connect(deployer).Swap(MatchedOrders);
+      await swapper.connect(deployer).Swap(MatchedOrders);
 
       // post transaction balances
       const SWT3T3postTxBalance = await token3.balanceOf(smartWallet.address);
@@ -341,7 +341,7 @@ describe("swapper", function () {
       // uint16 private constant ZERO_TRANSFER_AMOUNT_ERROR_CODE = 406;
 
       // event data
-      const tx = await proxy.Swap(MatchedOrders);
+      const tx = await swapper.Swap(MatchedOrders);
       const transactionReceipt = await tx.wait();
       const events = transactionReceipt.events;
 
@@ -408,8 +408,8 @@ describe("swapper", function () {
         buyTokenAddress: MatchedOrders[0].makerSellTokenAddress,
       };
 
-      const makerOrderData = await createMsgHash(makerMessage, proxy);
-      const takerOrderData = await createMsgHash(takerFakeMessage, proxy);
+      const makerOrderData = await createMsgHash(makerMessage, swapper);
+      const takerOrderData = await createMsgHash(takerFakeMessage, swapper);
 
       //adding signatures
       MatchedOrders[0].makerSignature = makerOrderData.UserSignature;
@@ -430,17 +430,17 @@ describe("swapper", function () {
       );
       await smartWallet
         .connect(daoMember1)
-        .ERC20Approve(token3.address, proxy.address, 1000n * 10n ** 18n);
+        .ERC20Approve(token3.address, swapper.address, 1000n * 10n ** 18n);
 
       // base allowances
       await token1
         .connect(daoMember1)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
+        .increaseAllowance(swapper.address, 1000n * 10n ** 18n);
 
       // adding caller to the brokerAddressees mapping
-      await proxy.connect(daoMember1).registerBrokers([deployer.address]);
+      await swapper.connect(daoMember1).registerBrokers([deployer.address]);
       // broadcast the order to the contract
-      const tx = await proxy.connect(deployer).Swap(MatchedOrders);
+      const tx = await swapper.connect(deployer).Swap(MatchedOrders);
 
       // event data
       const transactionReceipt = await tx.wait();
@@ -504,8 +504,8 @@ describe("swapper", function () {
         buyTokenAddress: MatchedOrders[0].makerSellTokenAddress,
       };
 
-      const makerOrderData = await createMsgHash(makerMessage, proxy);
-      const takerOrderData = await createMsgHash(takerFakeMessage, proxy);
+      const makerOrderData = await createMsgHash(makerMessage, swapper);
+      const takerOrderData = await createMsgHash(takerFakeMessage, swapper);
 
       //adding signatures
       MatchedOrders[0].makerSignature = makerOrderData.UserSignature;
@@ -522,11 +522,11 @@ describe("swapper", function () {
       // base allowances
       await token1
         .connect(daoMember1)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
+        .increaseAllowance(swapper.address, 1000n * 10n ** 18n);
 
       //asserts
       await expect(
-        proxy.connect(daoMember6).Swap(MatchedOrders)
+        swapper.connect(daoMember6).Swap(MatchedOrders)
       ).to.be.revertedWith("ERROR: unauthorized caller");
     });
   });
