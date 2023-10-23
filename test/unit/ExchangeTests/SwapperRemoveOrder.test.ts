@@ -84,24 +84,11 @@ describe("swapper", function () {
 
       // adding caller to the brokerAddressees mapping
       await proxy.connect(daoMember1).registerBrokers([deployer.address]);
-      // cancelling the makers order
-      const cancelOrders = {
-        maxFeeRatio: 20,
-        orderID: 2356,
-        validUntil: 100,
-        chainID: chainID,
-        ratioSellArg: 3n * 10n ** 18n,
-        ratioBuyArg: 600n * 10n ** 18n,
-        sellTokenAddress: token3.address,
-        buyTokenAddress: token4.address,
-      };
-
-      const makerSignature = MatchedOrders[0].makerSignature;
       const makerOrderID = 2356;
 
       const tx1 = await proxy
         .connect(daoMember3)
-        .revokeOrder(cancelOrders, makerSignature);
+        .revokeOrder(makerOrderID);
 
       // getting the events data
 

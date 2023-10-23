@@ -91,11 +91,7 @@ describe("user info", function () {
 
     await createMsgHash(messageParameters, proxy);
 
-    const messageParametersSignature = messageParameters.UserSignature;
-
-    await proxy
-      .connect(daoMember1)
-      .revokeOrder(messageParameters, messageParametersSignature);
+    await proxy.connect(daoMember1).revokeOrder(messageParameters.orderID);
 
     const userInfo = await userInfoContract[
       "getUserInfo(address,address[],address,uint64)"
