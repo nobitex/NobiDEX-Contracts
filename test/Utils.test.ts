@@ -1,5 +1,5 @@
 import { BigNumber, Contract, utils } from "ethers";
-import hre, { ethers, upgrades } from "hardhat";
+import hre, { ethers } from "hardhat";
 const defaultFee = 20;
 
 export async function deployContracts(moderator: string) {
