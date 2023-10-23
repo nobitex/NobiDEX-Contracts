@@ -2,14 +2,12 @@
 
 pragma solidity 0.8.10;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/SignatureCheckerUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 import "../Utils/EIP712HashGenerator.sol";
 import "hardhat/console.sol";
 
@@ -22,15 +20,9 @@ import "hardhat/console.sol";
  * _validateTransaction, _getMessageHash, _isValidSignatureHash.
  */
 
-contract Swapper is
-    Initializable,
-    UUPSUpgradeable,
-    PausableUpgradeable,
-    ReentrancyGuardUpgradeable,
-    EIP712HashGenerator
-{
-    using SafeERC20Upgradeable for IERC20Upgradeable;
-    using StringsUpgradeable for uint8;
+contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
+    using SafeERC20 for IERC20;
+    using Strings for uint8;
 
     // State Variables
 
@@ -142,13 +134,13 @@ contract Swapper is
      *@dev Sets the values for {MaxFeeRatio} and {Moderator} and {brokersAddresses} mapping.
      *
      */
-    function initialize(
+    constructor(
         address payable _moderator,
         address[] memory _brokers,
         uint32 _FeeRatioDenominator,
         uint16 _maxFeeRatio,
         uint8 _version
-    ) public initializer onlyProxy {
+    ) {
         __EIP712HashGenerator_init("Nobidex", _version.toString());
 
         errorCodes = [402, 410, 408, 417, 401];
@@ -185,7 +177,7 @@ contract Swapper is
 
     function Swap(
         MatchedOrders[] calldata matchedOrders
-    ) external virtual whenNotPaused isBroker nonReentrant onlyProxy {
+    ) external virtual whenNotPaused isBroker nonReentrant  {
         SwapStatus[] memory batchExecuteStatus = new SwapStatus[](
             matchedOrders.length
         );
@@ -300,7 +292,6 @@ contract Swapper is
      * this suggestion will be reviewed by DAOmembers and after the appropriate approvals in the Moderator contract,
      * the proposed address is assigned to the candidateModerator variables,
      *
-     * @notice proposeToUpdateModerator function is for the time it is decided decide to change the contracts proxy,
      *
      * @dev the new Moderator address cannot be the same as the last one,
      * @dev msg.sender must be the previous Moderator contract,
@@ -379,12 +370,10 @@ contract Swapper is
                 uint256 EthBalance = address(this).balance;
                 payable(Moderator).transfer(EthBalance);
             } else {
-                uint256 balance = IERC20Upgradeable(tokenAddresses[i])
-                    .balanceOf(address(this));
-                IERC20Upgradeable(tokenAddresses[i]).safeTransfer(
-                    Moderator,
-                    balance
+                uint256 balance = IERC20(tokenAddresses[i]).balanceOf(
+                    address(this)
                 );
+                IERC20(tokenAddresses[i]).safeTransfer(Moderator, balance);
             }
 
             unchecked {
@@ -573,27 +562,27 @@ contract Swapper is
         uint256 _takerFee,
         uint256 _makerFee
     ) internal {
-        IERC20Upgradeable(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
-                _matchedOrder.makerUserAddress,
-                _matchedOrder.takerUserAddress,
-                _matchedOrder.makerTotalSellAmount - _takerFee
-            );
-        IERC20Upgradeable(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
-                _matchedOrder.takerUserAddress,
-                _matchedOrder.makerUserAddress,
-                _matchedOrder.takerTotalSellAmount - _makerFee
-            );
+        IERC20(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
+            _matchedOrder.makerUserAddress,
+            _matchedOrder.takerUserAddress,
+            _matchedOrder.makerTotalSellAmount - _takerFee
+        );
+        IERC20(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
+            _matchedOrder.takerUserAddress,
+            _matchedOrder.makerUserAddress,
+            _matchedOrder.takerTotalSellAmount - _makerFee
+        );
 
-        IERC20Upgradeable(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
-                _matchedOrder.makerUserAddress,
-                Moderator,
-                _takerFee
-            );
-        IERC20Upgradeable(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
-                _matchedOrder.takerUserAddress,
-                Moderator,
-                _makerFee
-            );
+        IERC20(_matchedOrder.makerSellTokenAddress).safeTransferFrom(
+            _matchedOrder.makerUserAddress,
+            Moderator,
+            _takerFee
+        );
+        IERC20(_matchedOrder.takerSellTokenAddress).safeTransferFrom(
+            _matchedOrder.takerUserAddress,
+            Moderator,
+            _makerFee
+        );
     }
 
     /**
@@ -627,7 +616,7 @@ contract Swapper is
         bytes memory _userSignature
     ) internal view returns (bool) {
         return
-            SignatureCheckerUpgradeable.isValidSignatureNow(
+            SignatureChecker.isValidSignatureNow(
                 _userAddress,
                 _messageHash,
                 _userSignature
@@ -678,10 +667,8 @@ contract Swapper is
         uint256 _userSellAmount
     ) internal view returns (bool) {
         bool isTransactionValid;
-        uint256 userBalance = IERC20Upgradeable(_userSellToken).balanceOf(
-            _userAddress
-        );
-        uint256 userAllowance = IERC20Upgradeable(_userSellToken).allowance(
+        uint256 userBalance = IERC20(_userSellToken).balanceOf(_userAddress);
+        uint256 userAllowance = IERC20(_userSellToken).allowance(
             _userAddress,
             address(this)
         );
@@ -694,14 +681,5 @@ contract Swapper is
             isTransactionValid = false;
         }
         return isTransactionValid;
-    }
-
-    function _authorizeUpgrade(
-        address _newImplementation
-    ) internal override isModerator {
-        require(
-            _newImplementation != address(0),
-            "ERROR: upgrade to zero address"
-        );
     }
 }
