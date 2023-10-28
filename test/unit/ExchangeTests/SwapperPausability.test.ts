@@ -9,11 +9,11 @@ import hre from "hardhat";
 import { Contract, ethers } from "ethers";
 
 describe("swaper - Pausibility", function () {
-  let gnosis: Contract, proxy: Contract, provider: ethers.providers.JsonRpcProvider;
+  let gnosis: Contract, swapper: Contract, provider: ethers.providers.JsonRpcProvider;
 
   beforeEach(async function () {
     gnosis = (await deployGnosisContract()).gnosis;
-    proxy = (await deployContracts(gnosis.address)).proxy;
+    swapper = (await deployContracts(gnosis.address)).swapper;
     provider = hre.ethers.provider;
     await provider.ready;
   });
@@ -21,55 +21,55 @@ describe("swaper - Pausibility", function () {
   //   to run the first test block swapper should have a fallback function
   //   due to the fact that we have to deposit some ether to the swapper contract to check the ether withdraw functionality
 
-  //   it('should pause proxy', async function () {
+  //   it('should pause swapper', async function () {
   //     // arrange
   //     const provider = hre.ethers.provider
   //     await provider.ready
 
-  //     const { gnosis, proxy, token1 } = await loadFixture(deployContracts)
+  //     const { gnosis, swapper, token1 } = await loadFixture(deployContracts)
   //     const { daoMember1 } = await getAccounts()
 
   //     const balance = 100
-  //     await token1.transfer(proxy.address, balance)
+  //     await token1.transfer(swapper.address, balance)
   //     const value = ethers.utils.parseEther('1')
 
   //     await daoMember1.sendTransaction({
-  //       to: proxy.address,
+  //       to: swapper.address,
   //       value: value
   //     })
 
   //     const add = ethers.constants.AddressZero
 
   //     // pause swapper
-  //     await proxy.connect(daoMember1).pause([add, token1.address])
+  //     await swapper.connect(daoMember1).pause([add, token1.address])
   //     // assert if tokens withdrawn successfully
   //     expect(await token1.balanceOf(gnosis.address)).to.be.equal(balance)
   //     expect(await ethers.provider.getBalance(gnosis.address)).to.be.equal(value)
 
   //     // assert if contract's paused
-  //     await expect(proxy.connect(daoMember1).updateFeeRatio(5)).to.be.revertedWith('Pausable: paused')
+  //     await expect(swapper.connect(daoMember1).updateFeeRatio(5)).to.be.revertedWith('Pausable: paused')
   //   })
   it("should unpause swapper", async function () {
     // arrange
 
     const { daoMember1 } = await getAccounts();
 
-    // pause proxy
-    await proxy.connect(daoMember1).pause([]);
+    // pause swapper
+    await swapper.connect(daoMember1).pause([]);
     // assert if contract's paused
     await expect(
-      proxy.connect(daoMember1).updateFeeRatio(5)
+      swapper.connect(daoMember1).updateFeeRatio(5)
     ).to.be.revertedWith("Pausable: paused");
-    // create multisi transaction to unpause proxy
-    await gnosis.connect(daoMember1).unpauseSwapper(proxy.address);
-    await expect(proxy.unpause()).to.be.revertedWith("Pausable: not paused");
+    // create multisi transaction to unpause swapper
+    await gnosis.connect(daoMember1).unpauseSwapper(swapper.address);
+    await expect(swapper.unpause()).to.be.revertedWith("Pausable: not paused");
     // assert if contract's unpaused
   });
   it("should revert if caller is not admin", async function () {
     const { evil } = await getAccounts();
 
     // act & assert
-    await expect(proxy.connect(evil).pause([])).to.be.revertedWith(
+    await expect(swapper.connect(evil).pause([])).to.be.revertedWith(
       "ERROR: unauthorized caller"
     );
   });
@@ -78,7 +78,7 @@ describe("swaper - Pausibility", function () {
 
     const { evil } = await getAccounts();
     // act & assert
-    await expect(proxy.connect(evil).unpause()).to.be.revertedWith(
+    await expect(swapper.connect(evil).unpause()).to.be.revertedWith(
       "Pausable: not paused"
     );
   });

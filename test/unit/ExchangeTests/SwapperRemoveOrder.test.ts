@@ -13,11 +13,11 @@ describe("swapper", function () {
   let gnosis: Contract,
     token3: Contract,
     token4: Contract,
-    proxy: ethers.Contract;
+    swapper: ethers.Contract;
 
   beforeEach(async function () {
     gnosis = (await deployGnosisContract()).gnosis;
-    proxy = (await deployContracts(gnosis.address)).proxy;
+    swapper = (await deployContracts(gnosis.address)).swapper;
     token3 = (await deployContracts(gnosis.address)).token3;
     token4 = (await deployContracts(gnosis.address)).token4;
   });
@@ -58,7 +58,7 @@ describe("swapper", function () {
         },
       ];
 
-      MatchedOrders = await createOrderHash(MatchedOrders, proxy);
+      MatchedOrders = await createOrderHash(MatchedOrders, swapper);
 
       // base transfers
       const _amounts = [
@@ -77,16 +77,17 @@ describe("swapper", function () {
 
       await token3
         .connect(daoMember3)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
+        .increaseAllowance(swapper.address, 1000n * 10n ** 18n);
       await token4
         .connect(daoMember4)
-        .increaseAllowance(proxy.address, 1000n * 10n ** 18n);
+        .increaseAllowance(swapper.address, 1000n * 10n ** 18n);
 
       // adding caller to the brokerAddressees mapping
-      await proxy.connect(daoMember1).registerBrokers([deployer.address]);
+      await swapper.connect(daoMember1).registerBrokers([deployer.address]);
+
       const makerOrderID = 2356;
 
-      const tx1 = await proxy
+      const tx1 = await swapper
         .connect(daoMember3)
         .revokeOrder(makerOrderID);
 
@@ -105,7 +106,7 @@ describe("swapper", function () {
 
       // broadcast the order to the contract
 
-      const tx2 = await proxy.connect(deployer).Swap(MatchedOrders);
+      const tx2 = await swapper.connect(deployer).Swap(MatchedOrders);
 
       // getting the events data
       const transactionReceipt2 = await tx2.wait();
