@@ -1,17 +1,17 @@
 import { BigNumber, Contract, utils } from "ethers";
-import hre, { ethers, upgrades } from "hardhat";
+import hre, { ethers } from "hardhat";
 const defaultFee = 20;
 
 export async function deployContracts(moderator: string) {
   // deploys swapper
 
-  const { proxy } = await deploySwapper(moderator);
+  const { swapper } = await deploySwapper(moderator);
 
   const { userInfo } = await deployUserInfo();
 
   // deploying 4 mock erc20 tokens
   const { token1, token2, token3, token4 } = await deployERC20();
-  return { proxy, userInfo, token1, token2, token3, token4 };
+  return { swapper, userInfo, token1, token2, token3, token4 };
 }
 export async function deployGnosisContract() {
   // deploys swapper
@@ -58,9 +58,7 @@ async function deploySwapper(multiSig: string) {
     await getAccounts();
 
   const Swapper = await ethers.getContractFactory("Swapper");
-  const proxy = await upgrades.deployProxy(
-    Swapper,
-    [
+  const swapper = await Swapper.deploy(
       multiSig,
       [
         daoMember1.address,
@@ -70,12 +68,9 @@ async function deploySwapper(multiSig: string) {
       ],
       1000,
       defaultFee,
-      3,
-    ],
-    { kind: "uups" }
-  );
-  await proxy.deployed();
-  return { proxy };
+      3);
+  await swapper.deployed();
+  return { swapper };
 }
 
 export async function deployGnosisMock() {
@@ -93,12 +88,6 @@ export async function deployGnosisMock() {
   return gnosis;
 }
 
-export async function deployProxyUpgrade() {
-  const SwapperUpgrade = await ethers.getContractFactory("SwapperUpgrade");
-  const swapperUpgrade = await SwapperUpgrade.deploy();
-  await swapperUpgrade.deployed();
-  return { swapperUpgrade };
-}
 
 export async function deployUserInfo() {
   const UserInfo = await ethers.getContractFactory("UserInfo");
@@ -137,10 +126,10 @@ export async function transferSomeTokens(
   const { deployer } = await getAccounts();
   // deploys swapper
 
-  const { proxy } = await deploySwapper(deployer.address);
+  const { swapper } = await deploySwapper(deployer.address);
   for (let i = 0; i < tokens.length; i++) {
     await tokens[i].transfer(to[i].address, amounts[i]);
-    await tokens[i].connect(to[i]).increaseAllowance(proxy.address, amounts[i]);
+    await tokens[i].connect(to[i]).increaseAllowance(swapper.address, amounts[i]);
   }
 }
 

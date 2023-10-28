@@ -6,42 +6,42 @@ import {
 import { Contract, ethers } from "ethers";
 const defaultFee = 20;
 describe("Swapper - updateSwapperFee", function () {
-  let gnosis: Contract, proxy: ethers.Contract;
+  let gnosis: Contract, swapper: ethers.Contract;
 
   beforeEach(async function () {
     gnosis = (await deployGnosisContract()).gnosis;
-    proxy = (await deployContracts(gnosis.address)).proxy;
+    swapper = (await deployContracts(gnosis.address)).swapper;
   });
   it("should set swapper fee to non-zero value 5", async function () {
     // fetch current fee
-    const currentFee = await proxy.maxFeeRatio();
+    const currentFee = await swapper.maxFeeRatio();
     // double check values
     expect(currentFee).to.equal(defaultFee);
 
     // create a  transaction
-    await gnosis.updateSwapperFee(proxy.address, 5);
+    await gnosis.updateSwapperFee(swapper.address, 5);
 
     // fetch new fee
-    const newFee = await proxy.maxFeeRatio();
+    const newFee = await swapper.maxFeeRatio();
     expect(newFee).to.equal(5);
   });
   it("should revert if external call fails", async function () {
     // fetch current fee
-    const currentFee = await proxy.maxFeeRatio();
+    const currentFee = await swapper.maxFeeRatio();
     expect(currentFee).to.equal(defaultFee);
     // assert
-    await expect(gnosis.updateSwapperFee(proxy.address, 20)).to.be.revertedWith(
+    await expect(gnosis.updateSwapperFee(swapper.address, 20)).to.be.revertedWith(
       "ERROR: external call failed"
     );
   });
   it("should revert if caller is not admin", async function () {
     // fetch current fee
-    const currentFee = await proxy.maxFeeRatio();
+    const currentFee = await swapper.maxFeeRatio();
     // double check values
     expect(currentFee).to.equal(defaultFee);
     // assert
 
-    await expect(proxy.updateFeeRatio(5)).to.be.revertedWith(
+    await expect(swapper.updateFeeRatio(5)).to.be.revertedWith(
       "ERROR: unauthorized caller"
     );
   });
