@@ -91,11 +91,8 @@ describe("user info", function () {
 
     await createMsgHash(messageParameters, swapper);
 
-    const messageParametersSignature = messageParameters.UserSignature;
+    await swapper.connect(daoMember1).revokeOrder(messageParameters.orderID);
 
-    await swapper
-      .connect(daoMember1)
-      .revokeOrder(messageParameters, messageParametersSignature);
 
     const userInfo = await userInfoContract[
       "getUserInfo(address,address[],address,uint64)"
