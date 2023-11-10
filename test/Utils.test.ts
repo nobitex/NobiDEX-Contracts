@@ -23,6 +23,7 @@ export async function deployGnosisContract() {
 export async function getAccounts() {
   const [
     deployer,
+    EOAmoderator,
     daoMember1,
     daoMember2,
     daoMember3,
@@ -34,6 +35,7 @@ export async function getAccounts() {
   ] = await ethers.getSigners();
   return {
     deployer,
+    EOAmoderator,
     daoMember1,
     daoMember2,
     daoMember3,
