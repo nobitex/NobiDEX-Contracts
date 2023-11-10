@@ -56,8 +56,6 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
     /// @dev brokersAddresses are the only addresses that are allowed to call the Swap function
     mapping(address => bool) public brokersAddresses;
 
-    mapping(address => bool) private DaoMembers;
-
     /// @dev orderRevokedStatus mapps the address of the user to one of it's orderIDs to the orders status
     /// @notice when the order status is true the order is considered cancelled
     mapping(address => mapping(uint64 => bool)) public orderRevokedStatus;
