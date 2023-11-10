@@ -54,10 +54,23 @@ contract GnosisMock {
         require(success, "ERROR: external call failed");
     }
 
+    function updateSwapperModerator(address _swapper) external {
+        (bool success, bytes memory data) = _swapper.call(
+            abi.encodeWithSignature("updateModerator()")
+        );
+        require(success, "ERROR: external call failed");
+    }
+
+    function pauseSwapper(address _swapper, address[] memory tokens) external {
+        (bool success, bytes memory data) = _swapper.call(
+            abi.encodeWithSignature("pause(address[])", tokens)
+        );
+        require(success, "ERROR: external call failed");
+    }
 
     function upgradeSwapper(
         address _swapper,
-        address _implementation
+        address _implementationpauseSwapper
     ) external {
         (bool success, bytes memory data) = _swapper.call(
             abi.encodeWithSignature("upgradeTo(address)", _implementation)
