@@ -187,10 +187,6 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
             MatchedOrders memory matchedOrder = matchedOrders[i];
             bool matchFailed = false;
 
-            (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
-                matchedOrder
-            );
-
             (
                 bool isTransactionFeasible,
                 bool isOrderCancelled
@@ -225,6 +221,10 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
             if (matchFailed) {
                 continue;
             }
+
+            (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
+                matchedOrder
+            );
 
             _swapTokens(matchedOrder, takerFee, makerFee);
 
