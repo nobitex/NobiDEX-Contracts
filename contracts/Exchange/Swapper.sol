@@ -121,7 +121,10 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
     /// @dev isDaoMember, checks to see if the caller is one the listed Moderator
     /// @dev daoMembers are the only addresses that are allowed to call the following functions: registerBrokers, unregisterBrokers, pause
     modifier isDaoMember() {
-        require(_isOwner(msg.sender), "ERROR: unauthorized caller");
+        require(
+            _isModerator() || _isOwner(msg.sender),
+            "ERROR: unauthorized caller"
+        );
         _;
     }
 
@@ -328,9 +331,7 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
      *
      */
 
-    function revokeOrder(
-            uint64 _orderID
-    ) external whenNotPaused {
+    function revokeOrder(uint64 _orderID) external whenNotPaused {
         bool orderStatus = orderRevokedStatus[msg.sender][_orderID];
         require(!orderStatus, "ERROR: already cancelled");
         orderRevokedStatus[msg.sender][_orderID] = true;
@@ -670,5 +671,13 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
             isTransactionValid = false;
         }
         return isTransactionValid;
+    }
+
+    function _isModerator() internal view returns (bool) {
+        if (msg.sender == Moderator) {
+            return true;
+        }
+
+        return false;
     }
 }
