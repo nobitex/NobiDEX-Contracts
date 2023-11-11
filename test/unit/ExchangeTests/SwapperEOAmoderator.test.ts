@@ -85,7 +85,7 @@ describe("swapper", function () {
       await gnosis.connect(daoMember1).unpauseSwapper(EOAswapper.address);
       expect(await EOAswapper.paused()).to.equal(false);
     });
-    it("EOAmoderator should have access to both isDaoMember and isModerator mod", async function () {
+    it("EOAmoderator should have access to both isDaoMember and isModerator modifier", async function () {
       await EOAswapper.connect(EOAmoderator).pause([]);
       expect(await EOAswapper.paused()).to.equal(true);
       await EOAswapper.connect(EOAmoderator).unpause();
