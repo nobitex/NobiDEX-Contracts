@@ -68,13 +68,7 @@ contract GnosisMock {
         require(success, "ERROR: external call failed");
     }
 
-    function upgradeSwapper(
-        address _swapper,
-        address _implementationpauseSwapper
-    ) external {
-        (bool success, bytes memory data) = _swapper.call(
-            abi.encodeWithSignature("upgradeTo(address)", _implementation)
-        );
+
         // if (!success) {
         //     // Ensure that the result contains at least 4 bytes (selector + revert reason length)
         //     require(data.length >= 4, "Revert reason not found");
@@ -89,8 +83,6 @@ contract GnosisMock {
 
         //     // console.log(revertReason);
         // }
-        require(success, "ERROR: external call failed.");
-    }
 
     receive() external payable {}
 }
