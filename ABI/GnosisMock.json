@@ -1,8 +1,9 @@
 [
   "constructor(address[])",
   "function isOwner(address) view returns (bool)",
+  "function pauseSwapper(address,address[])",
   "function proposeToUpdateSwapperModerator(address,address)",
   "function unpauseSwapper(address)",
   "function updateSwapperFee(address,uint16)",
-  "function upgradeSwapper(address,address)"
+  "function updateSwapperModerator(address)"
 ]
