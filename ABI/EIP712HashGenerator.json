@@ -1,3 +1,4 @@
 [
+  "constructor(string,string)",
   "function DOMAIN_SEPARATOR() view returns (bytes32)"
 ]
