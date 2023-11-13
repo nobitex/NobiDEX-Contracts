@@ -16,11 +16,7 @@ contract EIP712HashGenerator {
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
 
-    //onlyInitializing
-    function __EIP712HashGenerator_init(
-        string memory _name,
-        string memory _version
-    ) internal {
+    constructor(string memory _name, string memory _version) {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 EIP712_DOMAIN_TYPEHASH,
