@@ -140,9 +140,7 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
         uint32 _FeeRatioDenominator,
         uint16 _maxFeeRatio,
         uint8 _version
-    ) {
-        __EIP712HashGenerator_init("Nobidex", _version.toString());
-
+    ) EIP712HashGenerator("Nobidex", _version.toString()) {
         errorCodes = [402, 410, 408, 417, 401];
         maxFeeRatio = _maxFeeRatio;
         Moderator = _moderator;
@@ -330,9 +328,7 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
      *
      */
 
-    function revokeOrder(
-            uint64 _orderID
-    ) external whenNotPaused {
+    function revokeOrder(uint64 _orderID) external whenNotPaused {
         bool orderStatus = orderRevokedStatus[msg.sender][_orderID];
         require(!orderStatus, "ERROR: already cancelled");
         orderRevokedStatus[msg.sender][_orderID] = true;
