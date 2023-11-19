@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity 0.8.17;
 
 import "hardhat/console.sol";
 
@@ -54,14 +54,21 @@ contract GnosisMock {
         require(success, "ERROR: external call failed");
     }
 
-
-    function upgradeSwapper(
-        address _swapper,
-        address _implementation
-    ) external {
+    function updateSwapperModerator(address _swapper) external {
         (bool success, bytes memory data) = _swapper.call(
-            abi.encodeWithSignature("upgradeTo(address)", _implementation)
+            abi.encodeWithSignature("updateModerator()")
         );
+        require(success, "ERROR: external call failed");
+    }
+
+    function pauseSwapper(address _swapper, address[] memory tokens) external {
+        (bool success, bytes memory data) = _swapper.call(
+            abi.encodeWithSignature("pause(address[])", tokens)
+        );
+        require(success, "ERROR: external call failed");
+    }
+
+
         // if (!success) {
         //     // Ensure that the result contains at least 4 bytes (selector + revert reason length)
         //     require(data.length >= 4, "Revert reason not found");
@@ -76,8 +83,6 @@ contract GnosisMock {
 
         //     // console.log(revertReason);
         // }
-        require(success, "ERROR: external call failed.");
-    }
 
     receive() external payable {}
 }

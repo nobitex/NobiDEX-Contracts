@@ -1,6 +1,6 @@
 //SPDX-License-Identifier: MIT
 
-pragma solidity 0.8.10;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -50,13 +50,11 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
     // SUCCESSFUL SWAP 200 (OK)
     // https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
 
-    uint16[6] errorCodes;
+    uint16[5] errorCodes;
     uint16 private constant SUCCESSFUL_SWAP_CODE = 200;
 
     /// @dev brokersAddresses are the only addresses that are allowed to call the Swap function
     mapping(address => bool) public brokersAddresses;
-
-    mapping(address => bool) private DaoMembers;
 
     /// @dev orderRevokedStatus mapps the address of the user to one of it's orderIDs to the orders status
     /// @notice when the order status is true the order is considered cancelled
@@ -123,7 +121,10 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
     /// @dev isDaoMember, checks to see if the caller is one the listed Moderator
     /// @dev daoMembers are the only addresses that are allowed to call the following functions: registerBrokers, unregisterBrokers, pause
     modifier isDaoMember() {
-        require(_isOwner(msg.sender), "ERROR: unauthorized caller");
+        require(
+            _isModerator() || _isOwner(msg.sender),
+            "ERROR: unauthorized caller"
+        );
         _;
     }
 
@@ -184,10 +185,6 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
             MatchedOrders memory matchedOrder = matchedOrders[i];
             bool matchFailed = false;
 
-            (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
-                matchedOrder
-            );
-
             (
                 bool isTransactionFeasible,
                 bool isOrderCancelled
@@ -222,6 +219,10 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
             if (matchFailed) {
                 continue;
             }
+
+            (uint256 takerFee, uint256 makerFee) = _calculateTransactionFee(
+                matchedOrder
+            );
 
             _swapTokens(matchedOrder, takerFee, makerFee);
 
@@ -668,5 +669,13 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
             isTransactionValid = false;
         }
         return isTransactionValid;
+    }
+
+    function _isModerator() internal view returns (bool) {
+        if (msg.sender == Moderator) {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -3,15 +3,17 @@ import hre, { ethers } from "hardhat";
 const defaultFee = 20;
 
 export async function deployContracts(moderator: string) {
+  const { EOAmoderator } = await getAccounts();
   // deploys swapper
 
   const { swapper } = await deploySwapper(moderator);
+  const { EOAswapper } = await deploySwapper(EOAmoderator.address);
 
   const { userInfo } = await deployUserInfo();
 
   // deploying 4 mock erc20 tokens
   const { token1, token2, token3, token4 } = await deployERC20();
-  return { swapper, userInfo, token1, token2, token3, token4 };
+  return { swapper, userInfo, EOAswapper, token1, token2, token3, token4 };
 }
 export async function deployGnosisContract() {
   // deploys swapper
@@ -23,6 +25,7 @@ export async function deployGnosisContract() {
 export async function getAccounts() {
   const [
     deployer,
+    EOAmoderator,
     daoMember1,
     daoMember2,
     daoMember3,
@@ -34,6 +37,7 @@ export async function getAccounts() {
   ] = await ethers.getSigners();
   return {
     deployer,
+    EOAmoderator,
     daoMember1,
     daoMember2,
     daoMember3,
@@ -53,24 +57,39 @@ export async function forwardBlockTimestampByNDays(n: number) {
   await ethers.provider.send("evm_mine", [timestampBefore + days]);
 }
 
-async function deploySwapper(multiSig: string) {
+async function deploySwapper(Admin: string) {
   const { daoMember1, daoMember2, daoMember3, daoMember4 } =
     await getAccounts();
 
   const Swapper = await ethers.getContractFactory("Swapper");
   const swapper = await Swapper.deploy(
-      multiSig,
-      [
-        daoMember1.address,
-        daoMember2.address,
-        daoMember3.address,
-        daoMember4.address,
-      ],
-      1000,
-      defaultFee,
-      3);
+    Admin,
+    [
+      daoMember1.address,
+      daoMember2.address,
+      daoMember3.address,
+      daoMember4.address,
+    ],
+    1000,
+    defaultFee,
+    3
+  );
+  const EOAswapper = await Swapper.deploy(
+    Admin,
+    [
+      daoMember1.address,
+      daoMember2.address,
+      daoMember3.address,
+      daoMember4.address,
+    ],
+    1000,
+    defaultFee,
+    3
+  );
+
   await swapper.deployed();
-  return { swapper };
+  await EOAswapper.deployed();
+  return { swapper,EOAswapper };
 }
 
 export async function deployGnosisMock() {
@@ -87,7 +106,6 @@ export async function deployGnosisMock() {
   await gnosis.deployed();
   return gnosis;
 }
-
 
 export async function deployUserInfo() {
   const UserInfo = await ethers.getContractFactory("UserInfo");
@@ -129,7 +147,9 @@ export async function transferSomeTokens(
   const { swapper } = await deploySwapper(deployer.address);
   for (let i = 0; i < tokens.length; i++) {
     await tokens[i].transfer(to[i].address, amounts[i]);
-    await tokens[i].connect(to[i]).increaseAllowance(swapper.address, amounts[i]);
+    await tokens[i]
+      .connect(to[i])
+      .increaseAllowance(swapper.address, amounts[i]);
   }
 }
 
