@@ -42,7 +42,7 @@ const config: HardhatUserConfig = {
     arbitrumGoerli: {
       url: process.env.ARB_TEST_URL !== undefined ? process.env.ARB_TEST_URL : '',
       chainId: 421613,
-      accounts: process.env.ARB_TEST_PRIVATE_KEY !== undefined ? [process.env.ARB_TEST_PRIVATE_KEY] : [],
+      accounts: process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },
     Arbitrum: {
       url: process.env.ARB_MAIN_URL !== undefined ? process.env.ARB_MAIN_URL : '',
