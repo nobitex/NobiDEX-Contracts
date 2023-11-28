@@ -38,7 +38,7 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
 
     bytes32 constant ORDER_TYPEHASH =
         keccak256(
-            "OrderParameters(uint16 maxFeeRatio,uint64 orderID,uint64 validUntil,uint256 chainID,uint256 ratioSellArg,uint256 ratioBuyArg,address sellTokenAddress,address buyTokenAddress)"
+            "Order(uint16 maxFeeRatio,uint64 clientOrderId,uint64 validUntil,uint256 chainId,uint256 ratioSellArgument,uint256 ratioBuyArgument,address sellTokenAddress,address buyTokenAddress)"
         );
 
     // status codes
@@ -56,7 +56,7 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
     /// @dev brokersAddresses are the only addresses that are allowed to call the Swap function
     mapping(address => bool) public brokersAddresses;
 
-    /// @dev orderRevokedStatus mapps the address of the user to one of it's orderIDs to the orders status
+    /// @dev orderRevokedStatus mapps the address of the user to one of it's clientOrderIds to the orders status
     /// @notice when the order status is true the order is considered cancelled
     mapping(address => mapping(uint64 => bool)) public orderRevokedStatus;
 
@@ -88,16 +88,17 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
         uint16 statusCode;
     }
 
-    struct OrderParameters {
+    struct Order {
         uint16 maxFeeRatio;
-        uint64 orderID;
+        uint64 clientOrderId;
         uint64 validUntil;
-        uint256 chainID;
-        uint256 ratioSellArg;
-        uint256 ratioBuyArg;
+        uint256 chainId;
+        uint256 ratioSellArgument;
+        uint256 ratioBuyArgument;
         address sellTokenAddress;
         address buyTokenAddress;
     }
+
 
     // Events
 
@@ -141,7 +142,7 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
         uint32 _FeeRatioDenominator,
         uint16 _maxFeeRatio,
         uint8 _version
-    ) EIP712HashGenerator("Nobidex", _version.toString()) {
+    ) EIP712HashGenerator("nobidex", _version.toString()) {
         errorCodes = [402, 410, 408, 417, 401];
         maxFeeRatio = _maxFeeRatio;
         Moderator = _moderator;
@@ -324,16 +325,16 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
      * @notice revokeOrder function gives the users the ability to manage their orders on-chain in addition to managing
      * them off-chain through the dex itself,
      *
-     * @dev orderCancelled event is emitted with the msg.sender(users address) and the users orderID the wish to cancel,
-     * @param _orderID is the ID of the order the user wish to cancel.
+     * @dev orderCancelled event is emitted with the msg.sender(users address) and the users clientOrderId the wish to cancel,
+     * @param _clientOrderId is the ID of the order the user wish to cancel.
      *
      */
 
-    function revokeOrder(uint64 _orderID) external whenNotPaused {
-        bool orderStatus = orderRevokedStatus[msg.sender][_orderID];
+    function revokeOrder(uint64 _clientOrderId) external whenNotPaused {
+        bool orderStatus = orderRevokedStatus[msg.sender][_clientOrderId];
         require(!orderStatus, "ERROR: already cancelled");
-        orderRevokedStatus[msg.sender][_orderID] = true;
-        emit orderCancelled(msg.sender, _orderID);
+        orderRevokedStatus[msg.sender][_clientOrderId] = true;
+        emit orderCancelled(msg.sender, _clientOrderId);
     }
 
     // pause and unpause functions
@@ -443,7 +444,7 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
     function _checkTransactionValidity(
         MatchedOrders memory _matchedOrder
     ) internal view returns (bool, bool) {
-        uint256 chainID = block.chainid;
+        uint256 chainId = block.chainid;
 
         //Transaction validity
         bool isTransactionExpired = (_matchedOrder.makerValidUntil <
@@ -451,11 +452,11 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
 
         //signature validity
         bytes32 makerMsgHash = _getMessageHash(
-            OrderParameters(
+            Order(
                 maxFeeRatio,
                 _matchedOrder.makerOrderID,
                 _matchedOrder.makerValidUntil,
-                chainID,
+                chainId,
                 _matchedOrder.makerRatioSellArg,
                 _matchedOrder.makerRatioBuyArg,
                 _matchedOrder.makerSellTokenAddress,
@@ -464,11 +465,11 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
         );
 
         bytes32 takerMsgHash = _getMessageHash(
-            OrderParameters(
+            Order(
                 maxFeeRatio,
                 _matchedOrder.takerOrderID,
                 _matchedOrder.takerValidUntil,
-                chainID,
+                chainId,
                 _matchedOrder.takerRatioSellArg,
                 _matchedOrder.takerRatioBuyArg,
                 _matchedOrder.takerSellTokenAddress,
@@ -617,23 +618,23 @@ contract Swapper is Pausable, ReentrancyGuard, EIP712HashGenerator {
      * @dev _getMessageHash function is used in th execute Swap to hash the given Swap data,
      *
      *
-     * @param _orderParameters(OrderParameters struct) contains the data that a user signed while placing on order.
+     * @param _Order(Order struct) contains the data that a user signed while placing on order.
      *
      */
     function _getMessageHash(
-        OrderParameters memory _orderParameters
+        Order memory _Order
     ) internal view returns (bytes32) {
         bytes32 hash = keccak256(
             abi.encode(
                 ORDER_TYPEHASH,
-                _orderParameters.maxFeeRatio,
-                _orderParameters.orderID,
-                _orderParameters.validUntil,
-                _orderParameters.chainID,
-                _orderParameters.ratioSellArg,
-                _orderParameters.ratioBuyArg,
-                _orderParameters.sellTokenAddress,
-                _orderParameters.buyTokenAddress
+                _Order.maxFeeRatio,
+                _Order.clientOrderId,
+                _Order.validUntil,
+                _Order.chainId,
+                _Order.ratioSellArgument,
+                _Order.ratioBuyArgument,
+                _Order.sellTokenAddress,
+                _Order.buyTokenAddress
             )
         );
         return HashTypedMessage(hash);
