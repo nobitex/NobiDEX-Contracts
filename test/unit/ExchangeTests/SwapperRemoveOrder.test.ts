@@ -87,9 +87,7 @@ describe("swapper", function () {
 
       const makerOrderID = 2356;
 
-      const tx1 = await swapper
-        .connect(daoMember3)
-        .revokeOrder(makerOrderID);
+      const tx1 = await swapper.connect(daoMember3).revokeOrder(makerOrderID);
 
       // getting the events data
 

@@ -162,42 +162,42 @@ export async function createOrderHash(msg: any[], swapper: Contract) {
 
   for (let i = 0; i < msg.length; i++) {
     const types = {
-      OrderParameters: [
-        { name: "maxFeeRatio", type: "uint16" },
-        { name: "orderID", type: "uint64" },
-        { name: "validUntil", type: "uint64" },
-        { name: "chainID", type: "uint256" },
-        { name: "ratioSellArg", type: "uint256" },
-        { name: "ratioBuyArg", type: "uint256" },
-        { name: "sellTokenAddress", type: "address" },
-        { name: "buyTokenAddress", type: "address" },
-      ],
-    };
+        Order: [
+          { name: "maxFeeRatio", type: "uint16" },
+          { name: "clientOrderId", type: "uint64" },
+          { name: "validUntil", type: "uint64" },
+          { name: "chainId", type: "uint256" },
+          { name: "ratioSellArgument", type: "uint256" },
+          { name: "ratioBuyArgument", type: "uint256" },
+          { name: "sellTokenAddress", type: "address" },
+          { name: "buyTokenAddress", type: "address" },
+        ],
+      };
 
     const domain = {
-      name: "Nobidex",
+      name: "nobidex",
       version: "3",
       chainId: chainID,
       verifyingContract: swapper.address,
     };
     const makerOrderData = {
       maxFeeRatio: defaultFee,
-      orderID: msg[i].makerOrderID,
+      clientOrderId: msg[i].makerOrderID,
       validUntil: msg[i].makerValidUntil,
-      chainID: chainID,
-      ratioSellArg: msg[i].makerRatioSellArg,
-      ratioBuyArg: msg[i].makerRatioBuyArg,
+      chainId: chainID,
+      ratioSellArgument: msg[i].makerRatioSellArg,
+      ratioBuyArgument: msg[i].makerRatioBuyArg,
       sellTokenAddress: msg[i].makerSellTokenAddress,
       buyTokenAddress: msg[i].takerSellTokenAddress,
     };
 
     const takerOrderData = {
       maxFeeRatio: defaultFee,
-      orderID: msg[i].takerOrderID,
+      clientOrderId: msg[i].takerOrderID,
       validUntil: msg[i].takerValidUntil,
-      chainID: chainID,
-      ratioSellArg: msg[i].takerRatioSellArg,
-      ratioBuyArg: msg[i].takerRatioBuyArg,
+      chainId: chainID,
+      ratioSellArgument: msg[i].takerRatioSellArg,
+      ratioBuyArgument: msg[i].takerRatioBuyArg,
       sellTokenAddress: msg[i].takerSellTokenAddress,
       buyTokenAddress: msg[i].makerSellTokenAddress,
     };
@@ -226,32 +226,32 @@ export async function createMsgHash(msg: any, swapper: Contract) {
   const network = await provider.getNetwork();
   const chainID = network.chainId;
 
-  const types = {
-    OrderParameters: [
+  const types  = {
+    Order: [
       { name: "maxFeeRatio", type: "uint16" },
-      { name: "orderID", type: "uint64" },
+      { name: "clientOrderId", type: "uint64" },
       { name: "validUntil", type: "uint64" },
-      { name: "chainID", type: "uint256" },
-      { name: "ratioSellArg", type: "uint256" },
-      { name: "ratioBuyArg", type: "uint256" },
+      { name: "chainId", type: "uint256" },
+      { name: "ratioSellArgument", type: "uint256" },
+      { name: "ratioBuyArgument", type: "uint256" },
       { name: "sellTokenAddress", type: "address" },
       { name: "buyTokenAddress", type: "address" },
     ],
   };
 
   const domain = {
-    name: "Nobidex",
+    name: "nobidex",
     version: "3",
     chainId: chainID,
     verifyingContract: swapper.address,
   };
   const OrderData = {
     maxFeeRatio: defaultFee,
-    orderID: msg.orderID,
+    clientOrderId: msg.orderID,
     validUntil: msg.validUntil,
-    chainID: chainID,
-    ratioSellArg: msg.ratioSellArg,
-    ratioBuyArg: msg.ratioBuyArg,
+    chainId: chainID,
+    ratioSellArgument: msg.ratioSellArg,
+    ratioBuyArgument: msg.ratioBuyArg,
     sellTokenAddress: msg.sellTokenAddress,
     buyTokenAddress: msg.buyTokenAddress,
   };
@@ -270,31 +270,31 @@ export async function createTypedDataHash(msg: any, swapper: Contract) {
   const chainID = network.chainId;
 
   const types = {
-    OrderParameters: [
+    Order: [
       { name: "maxFeeRatio", type: "uint16" },
-      { name: "orderID", type: "uint64" },
+      { name: "clientOrderId", type: "uint64" },
       { name: "validUntil", type: "uint64" },
-      { name: "chainID", type: "uint256" },
-      { name: "ratioSellArg", type: "uint256" },
-      { name: "ratioBuyArg", type: "uint256" },
+      { name: "chainId", type: "uint256" },
+      { name: "ratioSellArgument", type: "uint256" },
+      { name: "ratioBuyArgument", type: "uint256" },
       { name: "sellTokenAddress", type: "address" },
       { name: "buyTokenAddress", type: "address" },
     ],
   };
 
   const domain = {
-    name: "Nobidex",
+    name: "nobidex",
     version: "3",
     chainId: chainID,
     verifyingContract: swapper.address,
   };
   const OrderData = {
     maxFeeRatio: defaultFee,
-    orderID: msg.orderID,
+    clientOrderId: msg.orderID,
     validUntil: msg.validUntil,
-    chainID: chainID,
-    ratioSellArg: msg.ratioSellArg,
-    ratioBuyArg: msg.ratioBuyArg,
+    chainId: chainID,
+    ratioSellArgument: msg.ratioSellArg,
+    ratioBuyArgument: msg.ratioBuyArg,
     sellTokenAddress: msg.sellTokenAddress,
     buyTokenAddress: msg.buyTokenAddress,
   };
