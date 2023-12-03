@@ -9,7 +9,7 @@ on:
     branches:
       - development
       - master
-jobs:
+jobs:git status
   run-linters:
     name: Run linters
     runs-on: ubuntu-latest
@@ -45,7 +45,7 @@ jobs:
       - name: Install dependencies
         run: yarn install
       - name: compile check
-        run: npx hardhat console --network localhost
+        run: npx hardhat compile
       - name: Run unit tests
         run: npx hardhat test
 
