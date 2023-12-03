@@ -45,8 +45,6 @@ jobs:
             yarn-
       - name: Install dependencies
         run: yarn install
-      - name: compile check
-        run: npx hardhat compile
       - name: Run unit tests
         run: npx hardhat test
 
