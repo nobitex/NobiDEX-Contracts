@@ -9,7 +9,7 @@ on:
     branches:
       - development
       - master
-jobs:git status
+jobs:
   run-linters:
     name: Run linters
     runs-on: ubuntu-latest
