@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: 16.20.0
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
       - name: Run linters
         run: yarn lint
 
@@ -43,7 +43,7 @@ jobs:
           restore-keys: |
             yarn-
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
       - name: compile check
         run: npx hardhat console --network localhost
       - name: Run unit tests
@@ -69,7 +69,7 @@ jobs:
         with:
           python-version: 3.8
       - name: Install node dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install 
       - name: Install pip3
         run: |
           python -m pip install --upgrade pip
